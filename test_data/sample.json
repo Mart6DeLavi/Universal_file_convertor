@@ -1,0 +1,20 @@
+[
+  {
+    "imię": "Jan",
+    "nazwisko": "Kowalski",
+    "miasto": "Łódź",
+    "uwagi": "Zażółć gęślą jaźń",
+    "aktywny": true,
+    "adres": {
+      "ulica": "Piotrkowska",
+      "numer": 1
+    }
+  },
+  {
+    "imię": "Anna",
+    "nazwisko": "Nowak",
+    "miasto": "Kraków",
+    "uwagi": "",
+    "aktywny": false
+  }
+]
