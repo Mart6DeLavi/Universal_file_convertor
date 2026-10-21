@@ -25,7 +25,7 @@ class SourceInfo:
             stat = path.stat()
         except OSError as exc:
             raise ValidationError(
-                f"Не удалось прочитать файл: {path}", "Проверьте права доступа к файлу."
+                f"Could not read the file: {path}", "Check the file permissions."
             ) from exc
         return cls(
             path=path,

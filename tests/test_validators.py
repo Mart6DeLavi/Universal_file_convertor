@@ -26,14 +26,14 @@ def make_source(tmp_path, name="input.csv", content="a,b\n1,2\n"):
 
 
 def test_validate_missing_source(tmp_path):
-    with pytest.raises(ValidationError, match="не найден"):
+    with pytest.raises(ValidationError, match="not found"):
         validate_source(tmp_path / "missing.csv")
 
 
 def test_validate_source_is_directory(tmp_path):
     directory = tmp_path / "folder.csv"
     directory.mkdir()
-    with pytest.raises(ValidationError, match="обычным файлом"):
+    with pytest.raises(ValidationError, match="regular file"):
         validate_source(directory)
 
 
@@ -44,11 +44,11 @@ def test_validate_unsupported_extension(tmp_path):
 
 
 def test_validate_target_unknown_and_unregistered(tmp_path):
-    with pytest.raises(ValidationError, match="не выбран"):
+    with pytest.raises(ValidationError, match="No target format"):
         validate_target_format("csv", "")
-    with pytest.raises(UnsupportedConversionError, match="неизвестен"):
+    with pytest.raises(UnsupportedConversionError, match="is unknown"):
         validate_target_format("csv", "exe")
-    with pytest.raises(UnsupportedConversionError, match="не поддерживается"):
+    with pytest.raises(UnsupportedConversionError, match="is not supported"):
         validate_target_format("csv", "pdf")
 
 
@@ -64,7 +64,7 @@ def test_validate_request_success(tmp_path):
 def test_validate_missing_output_directory(tmp_path):
     source = make_source(tmp_path)
     request = ConversionRequest(source, "json", tmp_path / "missing")
-    with pytest.raises(ValidationError, match="не существует"):
+    with pytest.raises(ValidationError, match="does not exist"):
         validate_request(request)
 
 
@@ -72,14 +72,14 @@ def test_validate_output_path_is_not_directory(tmp_path):
     source = make_source(tmp_path)
     output_file = make_source(tmp_path, "not_a_dir", "x")
     request = ConversionRequest(source, "json", output_file)
-    with pytest.raises(ValidationError, match="не является каталогом"):
+    with pytest.raises(ValidationError, match="not a directory"):
         validate_request(request)
 
 
 def test_output_name_extension_mismatch(tmp_path):
     source = make_source(tmp_path)
     request = ConversionRequest(source, "json", tmp_path, output_name="result.txt")
-    with pytest.raises(ValidationError, match="не совпадает"):
+    with pytest.raises(ValidationError, match="does not match"):
         validate_request(request)
 
 
@@ -93,7 +93,7 @@ def test_output_name_without_extension_gets_target(tmp_path):
 def test_empty_output_name_rejected(tmp_path):
     source = make_source(tmp_path)
     request = ConversionRequest(source, "json", tmp_path, output_name="   ")
-    with pytest.raises(ValidationError, match="пустым"):
+    with pytest.raises(ValidationError, match="cannot be empty"):
         validate_request(request)
 
 

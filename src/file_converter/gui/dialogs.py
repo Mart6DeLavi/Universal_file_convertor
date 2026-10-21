@@ -32,12 +32,12 @@ class _Modal(ctk.CTkToplevel):
 
 class OverwriteDialog(_Modal):
     def __init__(self, parent, path: Path, suggested: Path):
-        super().__init__(parent, "Файл уже существует", 520, 250)
+        super().__init__(parent, "File already exists", 540, 250)
         self.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             self,
-            text="Целевой файл уже существует",
+            text="The target file already exists",
             font=ctk.CTkFont(size=18, weight="bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="ew", padx=24, pady=(24, 8))
@@ -45,14 +45,14 @@ class OverwriteDialog(_Modal):
             self,
             text=str(path),
             text_color=MUTED,
-            wraplength=460,
+            wraplength=480,
             justify="left",
             anchor="w",
         ).grid(row=1, column=0, sticky="ew", padx=24)
         ctk.CTkLabel(
             self,
-            text="Перезаписать файл, сохранить под новым именем или отменить операцию?",
-            wraplength=460,
+            text="Overwrite the file, save it under a new name, or cancel?",
+            wraplength=480,
             justify="left",
             anchor="w",
         ).grid(row=2, column=0, sticky="ew", padx=24, pady=(10, 0))
@@ -62,14 +62,23 @@ class OverwriteDialog(_Modal):
         buttons.grid_columnconfigure((0, 1, 2), weight=1)
 
         ctk.CTkButton(
-            buttons, text="Отмена", fg_color="transparent", border_width=1,
-            text_color=("#333333", "#dddddd"), command=self._cancel,
+            buttons,
+            text="Cancel",
+            fg_color="transparent",
+            border_width=1,
+            text_color=("#333333", "#dddddd"),
+            command=self._cancel,
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
         ctk.CTkButton(
-            buttons, text=f"Сохранить как {suggested.name}", command=self._unique,
+            buttons,
+            text=f"Save as {suggested.name}",
+            command=self._unique,
         ).grid(row=0, column=1, sticky="ew", padx=6)
         ctk.CTkButton(
-            buttons, text="Перезаписать", fg_color="#b91c1c", hover_color="#991b1b",
+            buttons,
+            text="Overwrite",
+            fg_color="#b91c1c",
+            hover_color="#991b1b",
             command=self._overwrite,
         ).grid(row=0, column=2, sticky="ew", padx=(6, 0))
 
@@ -83,8 +92,8 @@ class OverwriteDialog(_Modal):
 
 
 class ConfirmDialog(_Modal):
-    def __init__(self, parent, title: str, message: str, confirm_text: str = "Продолжить"):
-        super().__init__(parent, title, 440, 210)
+    def __init__(self, parent, title: str, message: str, confirm_text: str = "Continue"):
+        super().__init__(parent, title, 460, 210)
         self.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
             self,
@@ -95,7 +104,7 @@ class ConfirmDialog(_Modal):
         ctk.CTkLabel(
             self,
             text=message,
-            wraplength=390,
+            wraplength=410,
             justify="left",
             anchor="w",
         ).grid(row=1, column=0, sticky="ew", padx=24)
@@ -104,8 +113,12 @@ class ConfirmDialog(_Modal):
         buttons.grid(row=2, column=0, sticky="ew", padx=24, pady=(18, 20))
         buttons.grid_columnconfigure((0, 1), weight=1)
         ctk.CTkButton(
-            buttons, text="Отмена", fg_color="transparent", border_width=1,
-            text_color=("#333333", "#dddddd"), command=self._cancel,
+            buttons,
+            text="Cancel",
+            fg_color="transparent",
+            border_width=1,
+            text_color=("#333333", "#dddddd"),
+            command=self._cancel,
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
         ctk.CTkButton(buttons, text=confirm_text, command=self._confirm).grid(
             row=0, column=1, sticky="ew", padx=(6, 0)
@@ -117,9 +130,11 @@ class ConfirmDialog(_Modal):
 
 
 class MessageDialog(_Modal):
-    def __init__(self, parent, title: str, message: str, hint: str = "", error: bool = False):
+    def __init__(
+        self, parent, title: str, message: str, hint: str = "", error: bool = False
+    ):
         height = 300 if hint else 230
-        super().__init__(parent, title, 540, height)
+        super().__init__(parent, title, 560, height)
         self.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
             self,
@@ -131,7 +146,7 @@ class MessageDialog(_Modal):
         ctk.CTkLabel(
             self,
             text=message,
-            wraplength=480,
+            wraplength=500,
             justify="left",
             anchor="w",
         ).grid(row=1, column=0, sticky="ew", padx=24)
@@ -139,12 +154,12 @@ class MessageDialog(_Modal):
             ctk.CTkLabel(
                 self,
                 text=hint,
-                wraplength=480,
+                wraplength=500,
                 justify="left",
                 anchor="w",
                 text_color=MUTED,
             ).grid(row=2, column=0, sticky="ew", padx=24, pady=(10, 0))
-        ctk.CTkButton(self, text="Закрыть", command=self.destroy).grid(
+        ctk.CTkButton(self, text="Close", command=self.destroy).grid(
             row=3, column=0, sticky="ew", padx=24, pady=(18, 20)
         )
 
@@ -155,12 +170,16 @@ def ask_overwrite(parent, path: Path, suggested: Path) -> str | None:
     return dialog.result
 
 
-def ask_confirm(parent, title: str, message: str, confirm_text: str = "Продолжить") -> bool:
+def ask_confirm(
+    parent, title: str, message: str, confirm_text: str = "Continue"
+) -> bool:
     dialog = ConfirmDialog(parent, title, message, confirm_text)
     parent.wait_window(dialog)
     return dialog.result == "confirm"
 
 
-def show_message(parent, title: str, message: str, hint: str = "", error: bool = False) -> None:
+def show_message(
+    parent, title: str, message: str, hint: str = "", error: bool = False
+) -> None:
     dialog = MessageDialog(parent, title, message, hint, error)
     parent.wait_window(dialog)

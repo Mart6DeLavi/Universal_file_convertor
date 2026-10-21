@@ -52,7 +52,7 @@ def register_converter(
 
     def decorator(func: Converter) -> Converter:
         if key in REGISTRY:
-            raise RuntimeError(f"Конвертер {key[0]} → {key[1]} уже зарегистрирован.")
+            raise RuntimeError(f"Converter {key[0]} → {key[1]} is already registered.")
         REGISTRY[key] = ConverterSpec(
             source_format=key[0],
             target_format=key[1],
@@ -67,26 +67,26 @@ def register_converter(
 
 
 def _register_builtin() -> None:
-    register_converter("csv", "json", "Таблица CSV → массив JSON-объектов")(csv_to_json)
+    register_converter("csv", "json", "CSV table → array of JSON objects")(csv_to_json)
     register_converter(
-        "json", "csv", "Массив JSON-объектов → таблица CSV", allow_empty=True
+        "json", "csv", "Array of JSON objects → CSV table", allow_empty=True
     )(json_to_csv)
-    register_converter("txt", "docx", "Текст → документ Word (абзацы по строкам)")(txt_to_docx)
-    register_converter("docx", "txt", "Документ Word → обычный текст")(docx_to_txt)
-    register_converter("txt", "pdf", "Текст → PDF с Unicode-шрифтом")(txt_to_pdf)
+    register_converter("txt", "docx", "Text → Word document (one paragraph per line)")(txt_to_docx)
+    register_converter("docx", "txt", "Word document → plain text")(docx_to_txt)
+    register_converter("txt", "pdf", "Text → PDF with a Unicode font")(txt_to_pdf)
     register_converter(
-        "docx", "pdf", "Word → PDF через LibreOffice", requires_libreoffice=True
+        "docx", "pdf", "Word → PDF via LibreOffice", requires_libreoffice=True
     )(docx_to_pdf)
     register_converter(
-        "odt", "pdf", "OpenDocument → PDF через LibreOffice", requires_libreoffice=True
+        "odt", "pdf", "OpenDocument → PDF via LibreOffice", requires_libreoffice=True
     )(odt_to_pdf)
     register_converter(
-        "docx", "odt", "Word → OpenDocument через LibreOffice", requires_libreoffice=True
+        "docx", "odt", "Word → OpenDocument via LibreOffice", requires_libreoffice=True
     )(docx_to_odt)
     register_converter(
-        "odt", "docx", "OpenDocument → Word через LibreOffice", requires_libreoffice=True
+        "odt", "docx", "OpenDocument → Word via LibreOffice", requires_libreoffice=True
     )(odt_to_docx)
-    register_converter("odt", "txt", "OpenDocument → обычный текст через odfpy")(odt_to_txt)
+    register_converter("odt", "txt", "OpenDocument → plain text via odfpy")(odt_to_txt)
 
 
 _register_builtin()

@@ -19,8 +19,8 @@ def _configured_delimiter() -> str | None:
     value = value.replace("\\t", "\t")
     if len(value) != 1:
         raise ConversionError(
-            "Некорректный разделитель CSV в UFC_CSV_DELIMITER.",
-            "Укажите один символ, например ; или запятую.",
+            "Invalid CSV delimiter in UFC_CSV_DELIMITER.",
+            "Specify one character, for example ; or a comma.",
         )
     return value
 
@@ -30,11 +30,11 @@ def _read_text(source: Path) -> str:
         return source.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise ConversionError(
-            "CSV-файл не является корректным UTF-8.",
-            "Сохраните файл в кодировке UTF-8 и повторите попытку.",
+            "The CSV file is not valid UTF-8.",
+            "Save the file as UTF-8 and try again.",
         ) from exc
     except OSError as exc:
-        raise ConversionError(f"Не удалось прочитать CSV: {source}", str(exc)) from exc
+        raise ConversionError(f"Could not read the CSV file: {source}", str(exc)) from exc
 
 
 def _detect_dialect(text: str, delimiter: str | None) -> csv.Dialect:
@@ -57,13 +57,13 @@ def _validate_headers(headers: list[str]) -> None:
     for index, header in enumerate(headers, start=1):
         if header.strip() == "":
             raise ConversionError(
-                f"Пустой заголовок в колонке {index}.",
-                "Каждая колонка CSV должна иметь непустое имя.",
+                f"Empty header in column {index}.",
+                "Every CSV column must have a non-empty name.",
             )
         if header in seen:
             raise ConversionError(
-                f"Дублирующийся заголовок CSV: {header!r}.",
-                "Сделайте имена колонок уникальными, иначе преобразование неоднозначно.",
+                f"Duplicate CSV header: {header!r}.",
+                "Make column names unique; otherwise the conversion is ambiguous.",
             )
         seen[header] = index
 
@@ -75,8 +75,8 @@ def read_csv_records(
     text = _read_text(source)
     if not text.strip():
         raise ConversionError(
-            "CSV-файл пуст.",
-            "Файл должен содержать строку заголовков и хотя бы одну строку данных.",
+            "The CSV file is empty.",
+            "The file must contain a header row and at least one data row.",
         )
 
     dialect = _detect_dialect(text, delimiter or _configured_delimiter())
@@ -84,13 +84,13 @@ def read_csv_records(
         rows = list(csv.reader(io.StringIO(text, newline=""), dialect))
     except csv.Error as exc:
         raise ConversionError(
-            f"Не удалось разобрать CSV: {exc}",
-            "Проверьте кавычки и структуру строк.",
+            f"Could not parse the CSV file: {exc}",
+            "Check the quotes and row structure.",
         ) from exc
 
     rows = [row for row in rows if row]
     if not rows:
-        raise ConversionError("CSV не содержит данных.")
+        raise ConversionError("The CSV file contains no data.")
 
     headers = rows[0]
     _validate_headers(headers)
@@ -99,8 +99,8 @@ def read_csv_records(
     for number, row in enumerate(rows[1:], start=2):
         if len(row) != len(headers):
             raise ConversionError(
-                f"Строка {number} содержит {len(row)} полей, а заголовков — {len(headers)}.",
-                "Исправьте CSV так, чтобы число полей в каждой строке совпадало.",
+                f"Row {number} has {len(row)} fields, but there are {len(headers)} headers.",
+                "Adjust the CSV so every row has the same number of fields.",
             )
         records.append(dict(zip(headers, row)))
     return headers, records
@@ -114,7 +114,7 @@ def csv_to_json(source: Path, target: Path, delimiter: str | None = None) -> Pat
             json.dump(records, handle, ensure_ascii=False, indent=2)
             handle.write("\n")
     except OSError as exc:
-        raise ConversionError(f"Не удалось записать JSON: {target}", str(exc)) from exc
+        raise ConversionError(f"Could not write the JSON file: {target}", str(exc)) from exc
     return target
 
 
@@ -136,32 +136,32 @@ def json_to_csv(source: Path, target: Path) -> Path:
         raw = source.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise ConversionError(
-            "JSON-файл не является корректным UTF-8.",
-            "Сохраните файл в кодировке UTF-8.",
+            "The JSON file is not valid UTF-8.",
+            "Save the file as UTF-8.",
         ) from exc
     except OSError as exc:
-        raise ConversionError(f"Не удалось прочитать JSON: {source}", str(exc)) from exc
+        raise ConversionError(f"Could not read the JSON file: {source}", str(exc)) from exc
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise ConversionError(
-            f"Невалидный JSON: {exc.msg} (строка {exc.lineno}, колонка {exc.colno}).",
-            "Исправьте синтаксис JSON и повторите попытку.",
+            f"Invalid JSON: {exc.msg} (line {exc.lineno}, column {exc.colno}).",
+            "Fix the JSON syntax and try again.",
         ) from exc
 
     if not isinstance(data, list):
         raise ConversionError(
-            "Ожидается массив JSON на верхнем уровне.",
-            "Поддерживается структура [ {...}, {...} ].",
+            "A JSON array is expected at the top level.",
+            "The supported structure is [ {...}, {...} ].",
         )
 
     headers: list[str] = []
     for index, item in enumerate(data, start=1):
         if not isinstance(item, dict):
             raise ConversionError(
-                f"Элемент массива №{index} не является JSON-объектом.",
-                "Каждый элемент должен быть объектом вида {...}.",
+                f"Array element #{index} is not a JSON object.",
+                "Each element must be an object such as {...}.",
             )
         for key in item:
             if key not in headers:
@@ -178,5 +178,5 @@ def json_to_csv(source: Path, target: Path) -> Path:
                 row = {key: _cell_value(item.get(key)) for key in headers}
                 writer.writerow(row)
     except OSError as exc:
-        raise ConversionError(f"Не удалось записать CSV: {target}", str(exc)) from exc
+        raise ConversionError(f"Could not write the CSV file: {target}", str(exc)) from exc
     return target

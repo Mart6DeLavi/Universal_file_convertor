@@ -18,15 +18,15 @@ def _launch(command: list[str]) -> None:
         )
     except OSError as exc:
         raise FileConverterError(
-            "Не удалось открыть элемент системы.",
-            f"Команда: {' '.join(command)}. Причина: {exc}",
+            "Could not open the system item.",
+            f"Command: {' '.join(command)}. Reason: {exc}",
         ) from exc
 
 
 def open_file(path: Path) -> None:
     path = Path(path)
     if not path.is_file():
-        raise FileConverterError(f"Файл не найден: {path}")
+        raise FileConverterError(f"File not found: {path}")
     if sys.platform == "darwin":
         _launch(["open", str(path)])
     elif os.name == "nt":
@@ -38,7 +38,7 @@ def open_file(path: Path) -> None:
 def open_folder(path: Path) -> None:
     path = Path(path)
     if not path.is_dir():
-        raise FileConverterError(f"Папка не найдена: {path}")
+        raise FileConverterError(f"Folder not found: {path}")
     if sys.platform == "darwin":
         _launch(["open", str(path)])
     elif os.name == "nt":

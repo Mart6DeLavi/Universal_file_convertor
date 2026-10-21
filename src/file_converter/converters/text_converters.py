@@ -38,11 +38,11 @@ def read_text_file(source: Path) -> str:
         return source.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise ConversionError(
-            "Текстовый файл не является корректным UTF-8.",
-            "Сохраните файл в кодировке UTF-8 и повторите попытку.",
+            "The text file is not valid UTF-8.",
+            "Save the file as UTF-8 and try again.",
         ) from exc
     except OSError as exc:
-        raise ConversionError(f"Не удалось прочитать файл: {source}", str(exc)) from exc
+        raise ConversionError(f"Could not read the file: {source}", str(exc)) from exc
 
 
 def _split_lines(text: str) -> list[str]:
@@ -62,7 +62,7 @@ def txt_to_docx(source: Path, target: Path) -> Path:
     try:
         document.save(str(target))
     except OSError as exc:
-        raise ConversionError(f"Не удалось записать DOCX: {target}", str(exc)) from exc
+        raise ConversionError(f"Could not write the DOCX file: {target}", str(exc)) from exc
     return Path(target)
 
 
@@ -81,8 +81,8 @@ def docx_to_txt(source: Path, target: Path) -> Path:
         document = Document(str(source))
     except Exception as exc:
         raise ConversionError(
-            f"Не удалось открыть DOCX: {source}",
-            "Файл повреждён или не является документом Word.",
+            f"Could not open the DOCX file: {source}",
+            "The file is damaged or is not a Word document.",
         ) from exc
 
     lines: list[str] = []
@@ -92,19 +92,22 @@ def docx_to_txt(source: Path, target: Path) -> Path:
                 lines.append(block.text)
             else:
                 for row in block.rows:
-                    cells = [" ".join(p.text for p in cell.paragraphs).strip() for cell in row.cells]
+                    cells = [
+                        " ".join(p.text for p in cell.paragraphs).strip()
+                        for cell in row.cells
+                    ]
                     lines.append("\t".join(cells))
     except Exception as exc:
         raise ConversionError(
-            "Не удалось извлечь текст из DOCX.",
-            "Документ содержит нечитаемую структуру.",
+            "Could not extract text from the DOCX file.",
+            "The document contains an unreadable structure.",
         ) from exc
 
     text = "\n".join(lines)
     try:
         Path(target).write_text(text, encoding=DEFAULT_ENCODING)
     except OSError as exc:
-        raise ConversionError(f"Не удалось записать TXT: {target}", str(exc)) from exc
+        raise ConversionError(f"Could not write the TXT file: {target}", str(exc)) from exc
     return Path(target)
 
 
@@ -120,12 +123,12 @@ def _register_unicode_font() -> str:
                 return _FONT_NAME
             except Exception as exc:
                 raise DependencyMissingError(
-                    f"Не удалось зарегистрировать шрифт {candidate}.",
+                    f"Could not register the font {candidate}.",
                     str(exc),
                 ) from exc
     raise DependencyMissingError(
-        "Не найден Unicode-шрифт для создания PDF.",
-        "Установите DejaVu Sans, Arial или Liberation Sans и повторите попытку.",
+        "No Unicode font was found for PDF creation.",
+        "Install DejaVu Sans, Arial, or Liberation Sans and try again.",
     )
 
 
@@ -208,8 +211,8 @@ def odt_to_txt(source: Path, target: Path) -> Path:
         document = load_odt(str(source))
     except Exception as exc:
         raise ConversionError(
-            f"Не удалось открыть ODT: {source}",
-            "Файл повреждён или не является документом OpenDocument.",
+            f"Could not open the ODT file: {source}",
+            "The file is damaged or is not an OpenDocument document.",
         ) from exc
 
     lines: list[str] = []
@@ -217,12 +220,12 @@ def odt_to_txt(source: Path, target: Path) -> Path:
         _collect_odt_blocks(document.text, lines)
     except Exception as exc:
         raise ConversionError(
-            "Не удалось извлечь текст из ODT.",
-            "Документ содержит нечитаемую структуру.",
+            "Could not extract text from the ODT file.",
+            "The document contains an unreadable structure.",
         ) from exc
 
     try:
         Path(target).write_text("\n".join(lines), encoding=DEFAULT_ENCODING)
     except OSError as exc:
-        raise ConversionError(f"Не удалось записать TXT: {target}", str(exc)) from exc
+        raise ConversionError(f"Could not write the TXT file: {target}", str(exc)) from exc
     return Path(target)

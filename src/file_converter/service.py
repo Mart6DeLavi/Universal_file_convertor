@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def _log_start(request: ConversionRequest) -> float:
     logger.info(
-        "Старт конвертации: source=%s target=%s output_dir=%s",
+        "Conversion started: source=%s target=%s output_dir=%s",
         request.source,
         request.target_format,
         request.output_dir,
@@ -41,14 +41,14 @@ def execute(request: ConversionRequest) -> ConversionResult:
 
             if not temp_output.exists() or not temp_output.is_file():
                 raise ConversionError(
-                    "Конвертер не создал выходной файл.",
-                    f"Ожидался файл: {output_name}",
+                    "The converter did not create an output file.",
+                    f"Expected file: {output_name}",
                 )
             size = temp_output.stat().st_size
             if size == 0 and not spec.allow_empty:
                 raise ConversionError(
-                    "Конвертер создал пустой файл.",
-                    "Проверьте исходный документ и повторите попытку.",
+                    "The converter created an empty file.",
+                    "Check the source document and try again.",
                 )
 
             if output_path.exists() and not request.overwrite:
@@ -58,11 +58,11 @@ def execute(request: ConversionRequest) -> ConversionResult:
                 os.replace(temp_output, output_path)
             except OSError as exc:
                 raise ConversionError(
-                    f"Не удалось сохранить результат: {output_path}", str(exc)
+                    f"Could not save the result: {output_path}", str(exc)
                 ) from exc
     except Exception:
         logger.exception(
-            "Ошибка конвертации: source=%s target=%s",
+            "Conversion error: source=%s target=%s",
             request.source,
             request.target_format,
         )
@@ -74,7 +74,7 @@ def execute(request: ConversionRequest) -> ConversionResult:
     except OSError:
         result_size = 0
     logger.info(
-        "Успех: source=%s target=%s output=%s size=%s duration=%.3fs",
+        "Success: source=%s target=%s output=%s size=%s duration=%.3fs",
         request.source,
         request.target_format,
         output_path,

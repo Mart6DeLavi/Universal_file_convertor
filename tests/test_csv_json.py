@@ -85,14 +85,14 @@ def test_csv_invalid_headers_raise(tmp_path, content):
 def test_csv_inconsistent_field_count_raises(tmp_path):
     source = tmp_path / "bad.csv"
     source.write_text("a,b\n1\n", encoding="utf-8")
-    with pytest.raises(ConversionError, match="Строка 2"):
+    with pytest.raises(ConversionError, match="Row 2"):
         csv_to_json(source, tmp_path / "bad.json")
 
 
 def test_csv_empty_file_raises(tmp_path):
     source = tmp_path / "empty.csv"
     source.write_text("", encoding="utf-8")
-    with pytest.raises(ConversionError, match="пуст"):
+    with pytest.raises(ConversionError, match="empty"):
         csv_to_json(source, tmp_path / "empty.json")
 
 
@@ -133,21 +133,21 @@ def test_json_to_csv_empty_array_creates_empty_file(tmp_path):
 def test_json_invalid_raises(tmp_path):
     source = tmp_path / "bad.json"
     source.write_text('{"a": ', encoding="utf-8")
-    with pytest.raises(ConversionError, match="Невалидный JSON"):
+    with pytest.raises(ConversionError, match="Invalid JSON"):
         json_to_csv(source, tmp_path / "out.csv")
 
 
 def test_json_top_level_must_be_array(tmp_path):
     source = tmp_path / "object.json"
     source.write_text('{"a": 1}', encoding="utf-8")
-    with pytest.raises(ConversionError, match="массив"):
+    with pytest.raises(ConversionError, match="JSON array"):
         json_to_csv(source, tmp_path / "out.csv")
 
 
 def test_json_non_object_element_raises(tmp_path):
     source = tmp_path / "list.json"
     source.write_text("[1, 2]", encoding="utf-8")
-    with pytest.raises(ConversionError, match="не является JSON-объектом"):
+    with pytest.raises(ConversionError, match="not a JSON object"):
         json_to_csv(source, tmp_path / "out.csv")
 
 

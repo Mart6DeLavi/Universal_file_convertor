@@ -17,13 +17,13 @@ _WINDOWS_RESERVED = {
 
 def human_size(size: int) -> str:
     value = float(size)
-    for unit in ("Б", "КБ", "МБ", "ГБ", "ТБ"):
-        if value < 1024 or unit == "ТБ":
-            if unit == "Б":
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if value < 1024 or unit == "TB":
+            if unit == "B":
                 return f"{int(value)} {unit}"
             return f"{value:.1f} {unit}"
         value /= 1024
-    return f"{size} Б"
+    return f"{size} B"
 
 
 def sanitize_stem(stem: str) -> str:
@@ -37,26 +37,26 @@ def sanitize_stem(stem: str) -> str:
 
 def validate_output_name(name: str) -> str:
     if name is None:
-        raise ValidationError("Имя выходного файла не задано.")
+        raise ValidationError("The output file name was not provided.")
     name = name.strip()
     if not name:
-        raise ValidationError("Имя выходного файла не может быть пустым.")
+        raise ValidationError("The output file name cannot be empty.")
     if name in {".", ".."}:
-        raise ValidationError("Недопустимое имя выходного файла.")
+        raise ValidationError("Invalid output file name.")
     if Path(name).name != name:
         raise ValidationError(
-            "Имя выходного файла не должно содержать путь.",
-            "Укажите только имя файла, например report.pdf.",
+            "The output file name must not contain a path.",
+            "Provide only the file name, for example report.pdf.",
         )
     if _INVALID_CHARS.search(name):
         raise ValidationError(
-            "Имя содержит недопустимые символы: < > : \" / \\ | ? *",
-            "Уберите эти символы из имени.",
+            "The name contains invalid characters: < > : \" / \\ | ? *",
+            "Remove these characters from the name.",
         )
     if name.split(".")[0].upper() in _WINDOWS_RESERVED:
-        raise ValidationError("Это имя зарезервировано Windows.", "Выберите другое имя.")
+        raise ValidationError("This name is reserved by Windows.", "Choose another name.")
     if len(name) > 200:
-        raise ValidationError("Имя файла слишком длинное (более 200 символов).")
+        raise ValidationError("The file name is too long (more than 200 characters).")
     return name
 
 

@@ -17,10 +17,10 @@ _FILTERS = {
 }
 
 _INSTALL_HINT = (
-    "Установите LibreOffice: Windows — с сайта libreoffice.org; "
+    "Install LibreOffice: Windows — libreoffice.org; "
     "macOS — brew install --cask libreoffice; "
-    "Linux — sudo apt install libreoffice (или пакет вашего дистрибутива). "
-    "Путь можно задать переменной UFC_SOFFICE или в config.json (soffice_path)."
+    "Linux — sudo apt install libreoffice (or your distribution package). "
+    "You can set the path with UFC_SOFFICE or in config.json (soffice_path)."
 )
 
 
@@ -39,8 +39,10 @@ def _candidates() -> list[Path]:
             Path.home() / "Applications/LibreOffice.app/Contents/MacOS/soffice",
         ]
     elif os.name == "nt":
-        for root in (os.environ.get("ProgramFiles", r"C:\Program Files"),
-                     os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")):
+        for root in (
+            os.environ.get("ProgramFiles", r"C:\Program Files"),
+            os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+        ):
             candidates.append(Path(root) / "LibreOffice" / "program" / "soffice.exe")
     else:
         candidates += [
@@ -75,7 +77,9 @@ def _produced_file(outdir: Path, source: Path, suffix: str) -> Path | None:
     expected = outdir / f"{source.stem}.{suffix}"
     if expected.is_file():
         return expected
-    matches = sorted(p for p in outdir.iterdir() if p.is_file() and p.suffix.lower() == f".{suffix}")
+    matches = sorted(
+        p for p in outdir.iterdir() if p.is_file() and p.suffix.lower() == f".{suffix}"
+    )
     return matches[0] if matches else None
 
 
@@ -84,12 +88,14 @@ def convert_with_libreoffice(source: Path, target: Path) -> Path:
     target = Path(target)
     suffix = target.suffix.lower().lstrip(".")
     if suffix not in _FILTERS:
-        raise ConversionError(f"LibreOffice-конвертация в .{suffix} не поддерживается.")
+        raise ConversionError(
+            f"LibreOffice conversion to .{suffix} is not supported."
+        )
 
     executable = find_libreoffice()
     if executable is None:
         raise DependencyMissingError(
-            "LibreOffice не найден.",
+            "LibreOffice was not found.",
             _INSTALL_HINT,
         )
 
@@ -122,13 +128,13 @@ def convert_with_libreoffice(source: Path, target: Path) -> Path:
             )
         except subprocess.TimeoutExpired as exc:
             raise ExternalProcessError(
-                f"LibreOffice не завершил работу за {LIBREOFFICE_TIMEOUT} секунд.",
+                f"LibreOffice did not finish within {LIBREOFFICE_TIMEOUT} seconds.",
                 stderr=(exc.stderr or "") if isinstance(exc.stderr, str) else "",
-                hint="Закройте зависшие процессы LibreOffice и повторите попытку.",
+                hint="Close stuck LibreOffice processes and try again.",
             ) from exc
         except OSError as exc:
             raise ExternalProcessError(
-                "Не удалось запустить LibreOffice.",
+                "Could not start LibreOffice.",
                 stderr=str(exc),
                 hint=_INSTALL_HINT,
             ) from exc
@@ -136,21 +142,23 @@ def convert_with_libreoffice(source: Path, target: Path) -> Path:
         if result.returncode != 0:
             details = (result.stderr or result.stdout or "").strip()
             raise ExternalProcessError(
-                f"LibreOffice завершился с кодом {result.returncode}.",
+                f"LibreOffice exited with code {result.returncode}.",
                 stderr=details[-2000:],
-                hint="Проверьте, что документ не повреждён и LibreOffice работает.",
+                hint="Check that the document is valid and LibreOffice works.",
             )
 
         produced = _produced_file(outdir, source, suffix)
         if produced is None:
             details = (result.stderr or result.stdout or "").strip()
             raise ExternalProcessError(
-                "LibreOffice не создал ожидаемый файл.",
+                "LibreOffice did not create the expected file.",
                 stderr=details[-2000:],
-                hint="Проверьте поддержку формата и целостность исходного документа.",
+                hint="Check format support and the integrity of the source document.",
             )
         if produced.stat().st_size == 0:
-            raise ConversionError("LibreOffice создал пустой файл.", "Проверьте исходный документ.")
+            raise ConversionError(
+                "LibreOffice created an empty file.", "Check the source document."
+            )
         try:
             os.replace(produced, target)
         except OSError as exc:
@@ -158,6 +166,6 @@ def convert_with_libreoffice(source: Path, target: Path) -> Path:
                 shutil.copy2(produced, target)
             except OSError as copy_exc:
                 raise ConversionError(
-                    f"Не удалось сохранить результат: {target}", str(copy_exc)
+                    f"Could not save the result: {target}", str(copy_exc)
                 ) from exc
     return target

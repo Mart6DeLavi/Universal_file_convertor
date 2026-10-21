@@ -16,9 +16,9 @@ def main() -> int:
     try:
         from file_converter.gui.main_window import MainWindow
     except ModuleNotFoundError as exc:
-        print(f"Не удалось загрузить приложение: {exc}", file=sys.stderr)
+        print(f"Could not load the application: {exc}", file=sys.stderr)
         print(
-            "Установите зависимости: python -m pip install -r requirements.txt",
+            "Install the dependencies: python -m pip install -r requirements.txt",
             file=sys.stderr,
         )
         return 1
@@ -26,8 +26,8 @@ def main() -> int:
     try:
         window = MainWindow()
     except Exception as exc:
-        print(f"Не удалось запустить GUI: {exc}", file=sys.stderr)
-        print("Проверьте, что Python собран с поддержкой Tk (python-tk).", file=sys.stderr)
+        print(f"Could not start the GUI: {exc}", file=sys.stderr)
+        print("Make sure Python was built with Tk support (python-tk).", file=sys.stderr)
         return 1
     window.mainloop()
     return 0

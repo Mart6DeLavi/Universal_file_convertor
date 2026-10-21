@@ -7,17 +7,12 @@ from tkinter import filedialog
 
 import customtkinter as ctk
 
-from ..config import (
-    APP_NAME,
-    APP_VERSION,
-    FORMAT_LABELS,
-    SUPPORTED_FILETYPES,
-)
+from ..config import APP_NAME, APP_VERSION, FORMAT_LABELS, SUPPORTED_FILETYPES
 from ..exceptions import FileConverterError, OutputConflictError
 from ..models import ConversionRequest, SourceInfo
 from ..registry import available_targets
 from ..service import execute as execute_conversion
-from ..utils.paths import build_output_name, unique_path
+from ..utils.paths import build_output_name, human_size, unique_path
 from ..utils.platform_utils import open_file, open_folder
 from ..validators import build_output_path, validate_request, validate_source
 from .components import ACCENT, MUTED, SectionCard, StatusDot
@@ -43,111 +38,99 @@ class MainWindow(ctk.CTk):
         self._last_result_path: Path | None = None
 
         self.title(APP_NAME)
-        self.geometry("1040x860")
-        self.minsize(820, 680)
+        self.geometry("1180x720")
+        self.minsize(1000, 620)
         self.configure(fg_color=("#eef0f5", "#0f0f12"))
 
         self._build_layout()
-        self._set_status("Ожидание: выберите исходный файл", "idle")
+        self._set_status("Waiting for a source file", "idle")
         self._update_preview()
         self.after(100, self._poll_queue)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_layout(self) -> None:
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.content = ctk.CTkScrollableFrame(self, fg_color="transparent", corner_radius=0)
-        self.content.grid(row=0, column=0, sticky="nsew")
-        self.content.grid_columnconfigure(0, weight=1)
-
         self._build_header()
-        self._build_source_card()
-        self._build_settings_card()
-        self._build_action_card()
-        self._build_result_card()
+
+        self.workspace = ctk.CTkFrame(self, fg_color="transparent")
+        self.workspace.grid(
+            row=1, column=0, sticky="nsew", padx=24, pady=(0, 22)
+        )
+        self.workspace.grid_rowconfigure(0, weight=1)
+        self.workspace.grid_columnconfigure(0, weight=1, uniform="panel")
+        self.workspace.grid_columnconfigure(1, weight=1, uniform="panel")
+
+        self._build_source_panel()
+        self._build_result_panel()
 
     def _build_header(self) -> None:
-        header = ctk.CTkFrame(self.content, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=24, pady=(24, 16))
+        header = ctk.CTkFrame(self, fg_color="transparent")
+        header.grid(row=0, column=0, sticky="ew", padx=24, pady=(18, 12))
         header.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             header,
             text=APP_NAME,
-            font=ctk.CTkFont(size=30, weight="bold"),
+            font=ctk.CTkFont(size=28, weight="bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="w")
         ctk.CTkLabel(
             header,
-            text=(
-                f"Локальный конвертер файлов без загрузки в интернет · версия {APP_VERSION}"
-            ),
-            font=ctk.CTkFont(size=13),
+            text=f"Local conversion, no uploads · version {APP_VERSION}",
+            font=ctk.CTkFont(size=12),
             text_color=MUTED,
             anchor="w",
-        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+        ).grid(row=1, column=0, sticky="w", pady=(2, 0))
 
         self.theme_switch = ctk.CTkSwitch(
-            header, text="Светлая тема", command=self._toggle_theme
+            header, text="Light theme", command=self._toggle_theme
         )
         self.theme_switch.grid(row=0, column=1, rowspan=2, sticky="e")
 
-    def _build_source_card(self) -> None:
+    def _build_source_panel(self) -> None:
+        container = ctk.CTkFrame(self.workspace, fg_color="transparent")
+        container.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
         card = SectionCard(
-            self.content,
-            "1. Исходный файл",
-            "Выберите файл — доступные форматы определятся автоматически",
+            container,
+            "Source and settings",
+            "Choose a file, target format, and destination",
         )
-        card.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 14))
+        card.grid(row=0, column=0, sticky="nsew")
         body = card.body
-
+        body.grid_columnconfigure(0, minsize=112)
         body.grid_columnconfigure(1, weight=1)
-        ctk.CTkLabel(body, text="Путь", anchor="w").grid(row=0, column=0, sticky="w", padx=(0, 12))
 
+        ctk.CTkLabel(body, text="Source file", anchor="w").grid(
+            row=0, column=0, sticky="w", padx=(0, 10)
+        )
         self.source_path_var = ctk.StringVar(value="")
         self.source_path_entry = ctk.CTkEntry(
-            body, textvariable=self.source_path_var, state="readonly", height=36
+            body, textvariable=self.source_path_var, state="readonly", height=34
         )
         self.source_path_entry.grid(row=0, column=1, sticky="ew")
         self.browse_button = ctk.CTkButton(
-            body, text="Выбрать файл", width=130, command=self._browse_source
+            body, text="Browse", width=92, height=34, command=self._browse_source
         )
-        self.browse_button.grid(row=0, column=2, sticky="e", padx=(12, 0))
+        self.browse_button.grid(row=0, column=2, sticky="e", padx=(10, 0))
 
         info = ctk.CTkFrame(body, fg_color="transparent")
-        info.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(14, 0))
+        info.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(10, 0))
         info.grid_columnconfigure((0, 1, 2), weight=1)
 
-        self.source_name_label = self._info_tile(info, 0, "Имя файла", "—")
-        self.source_format_label = self._info_tile(info, 1, "Формат", "—")
-        self.source_size_label = self._info_tile(info, 2, "Размер", "—")
+        self.source_name_label = self._info_tile(info, 0, "Name", "—", 142)
+        self.source_format_label = self._info_tile(info, 1, "Format", "—", 142)
+        self.source_size_label = self._info_tile(info, 2, "Size", "—", 142)
 
-    def _info_tile(self, parent, column: int, caption: str, value: str) -> ctk.CTkLabel:
-        frame = ctk.CTkFrame(parent, fg_color=("#f5f6fa", "#17171b"), corner_radius=10)
-        frame.grid(row=0, column=column, sticky="ew", padx=(0 if column == 0 else 8, 0))
-        frame.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(
-            frame, text=caption, font=ctk.CTkFont(size=11), text_color=MUTED, anchor="w"
-        ).grid(row=0, column=0, sticky="w", padx=12, pady=(8, 0))
-        label = ctk.CTkLabel(
-            frame, text=value, font=ctk.CTkFont(size=13, weight="bold"), anchor="w"
-        )
-        label.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 9))
-        return label
+        divider = ctk.CTkFrame(body, height=1, fg_color=("#e4e4ec", "#2b2b31"))
+        divider.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(12, 12))
 
-    def _build_settings_card(self) -> None:
-        card = SectionCard(
-            self.content,
-            "2. Параметры результата",
-            "Форматы ограничены реально зарегистрированными конвертерами",
-        )
-        card.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 14))
-        body = card.body
-        body.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(body, text="Целевой формат", anchor="w").grid(
-            row=0, column=0, sticky="w", padx=(0, 12)
+        ctk.CTkLabel(body, text="Target format", anchor="w").grid(
+            row=3, column=0, sticky="w", padx=(0, 10)
         )
         self.target_var = ctk.StringVar(value="—")
         self.target_menu = ctk.CTkOptionMenu(
@@ -156,116 +139,300 @@ class MainWindow(ctk.CTk):
             variable=self.target_var,
             command=self._on_target_change,
             width=150,
+            height=32,
         )
-        self.target_menu.grid(row=0, column=1, sticky="w")
+        self.target_menu.grid(row=3, column=1, sticky="w")
+
         self.target_hint = ctk.CTkLabel(
             body,
-            text="Сначала выберите исходный файл",
+            text="Select a source file first",
             text_color=MUTED,
             font=ctk.CTkFont(size=11),
             anchor="w",
             justify="left",
-            wraplength=680,
+            wraplength=380,
         )
-        self.target_hint.grid(row=1, column=1, sticky="ew", pady=(6, 10))
+        self.target_hint.grid(row=4, column=1, columnspan=2, sticky="ew", pady=(4, 8))
 
-        ctk.CTkLabel(body, text="Папка назначения", anchor="w").grid(
-            row=2, column=0, sticky="w", padx=(0, 12)
+        ctk.CTkLabel(body, text="Output folder", anchor="w").grid(
+            row=5, column=0, sticky="w", padx=(0, 10)
         )
         self.output_dir_var = ctk.StringVar(value="")
-        self.output_dir_entry = ctk.CTkEntry(body, textvariable=self.output_dir_var, height=36)
-        self.output_dir_entry.grid(row=2, column=1, sticky="ew")
+        self.output_dir_entry = ctk.CTkEntry(
+            body, textvariable=self.output_dir_var, height=34
+        )
+        self.output_dir_entry.grid(row=5, column=1, sticky="ew")
         self.output_dir_entry.bind("<KeyRelease>", self._on_dir_typed)
         self.output_dir_button = ctk.CTkButton(
-            body, text="Выбрать папку", width=130, command=self._browse_output_dir
+            body,
+            text="Browse",
+            width=92,
+            height=34,
+            command=self._browse_output_dir,
         )
-        self.output_dir_button.grid(row=2, column=2, sticky="e", padx=(12, 0))
+        self.output_dir_button.grid(row=5, column=2, sticky="e", padx=(10, 0))
 
-        ctk.CTkLabel(body, text="Имя результата", anchor="w").grid(
-            row=3, column=0, sticky="w", padx=(0, 12), pady=(12, 0)
+        ctk.CTkLabel(body, text="Output name", anchor="w").grid(
+            row=6, column=0, sticky="w", padx=(0, 10), pady=(8, 0)
         )
         self.name_var = ctk.StringVar(value="")
-        self.name_entry = ctk.CTkEntry(body, textvariable=self.name_var, height=36)
-        self.name_entry.grid(row=3, column=1, sticky="ew", pady=(12, 0))
+        self.name_entry = ctk.CTkEntry(body, textvariable=self.name_var, height=34)
+        self.name_entry.grid(
+            row=6, column=1, columnspan=2, sticky="ew", pady=(8, 0)
+        )
         self.name_entry.bind("<KeyRelease>", self._on_name_typed)
 
         self.preview_label = ctk.CTkLabel(
             body,
-            text="Результат: —",
+            text="Result: —",
             text_color=MUTED,
             font=ctk.CTkFont(size=11),
             anchor="w",
             justify="left",
-            wraplength=760,
+            wraplength=520,
         )
-        self.preview_label.grid(row=4, column=1, columnspan=2, sticky="ew", pady=(8, 0))
-
-    def _build_action_card(self) -> None:
-        card = SectionCard(self.content, "3. Конвертация")
-        card.grid(row=3, column=0, sticky="ew", padx=24, pady=(0, 14))
-        body = card.body
+        self.preview_label.grid(
+            row=7, column=1, columnspan=2, sticky="ew", pady=(6, 0)
+        )
 
         self.convert_button = ctk.CTkButton(
             body,
-            text="Конвертировать",
-            height=48,
+            text="Convert",
+            height=44,
             font=ctk.CTkFont(size=15, weight="bold"),
             fg_color=ACCENT,
             command=self._start_conversion,
         )
-        self.convert_button.grid(row=0, column=0, sticky="ew", pady=(0, 14))
-        body.grid_columnconfigure(0, weight=1)
+        self.convert_button.grid(
+            row=8, column=0, columnspan=3, sticky="ew", pady=(14, 0)
+        )
 
         status_row = ctk.CTkFrame(body, fg_color="transparent")
-        status_row.grid(row=1, column=0, sticky="ew")
+        status_row.grid(row=9, column=0, columnspan=3, sticky="ew", pady=(10, 0))
         status_row.grid_columnconfigure(1, weight=1)
 
         self.status_dot = StatusDot(status_row)
         self.status_dot.grid(row=0, column=0, padx=(0, 8))
         self.status_label = ctk.CTkLabel(
-            status_row, text="Ожидание", anchor="w", font=ctk.CTkFont(size=12)
+            status_row, text="Waiting", anchor="w", font=ctk.CTkFont(size=12)
         )
         self.status_label.grid(row=0, column=1, sticky="w")
 
-        self.progress = ctk.CTkProgressBar(status_row, width=220, mode="indeterminate")
+        self.progress = ctk.CTkProgressBar(status_row, width=150, mode="indeterminate")
         self.progress.grid(row=0, column=2, sticky="e")
         self.progress.set(0)
 
-    def _build_result_card(self) -> None:
-        self.result_card = SectionCard(self.content, "Результат", "Файл успешно создан")
-        self.result_card.grid(row=4, column=0, sticky="ew", padx=24, pady=(0, 24))
+    def _info_tile(
+        self, parent, column: int, caption: str, value: str, wrap: int
+    ) -> ctk.CTkLabel:
+        frame = ctk.CTkFrame(
+            parent, fg_color=("#f5f6fa", "#17171b"), corner_radius=9
+        )
+        frame.grid(
+            row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 6, 0)
+        )
+        frame.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            frame,
+            text=caption,
+            font=ctk.CTkFont(size=10),
+            text_color=MUTED,
+            anchor="w",
+        ).grid(row=0, column=0, sticky="w", padx=10, pady=(6, 0))
+        label = ctk.CTkLabel(
+            frame,
+            text=value,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            anchor="w",
+            justify="left",
+            wraplength=wrap,
+        )
+        label.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 7))
+        return label
+
+    def _build_result_panel(self) -> None:
+        container = ctk.CTkFrame(self.workspace, fg_color="transparent")
+        container.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        self.result_card = SectionCard(
+            container,
+            "Result",
+            "The converted file appears here",
+        )
+        self.result_card.grid(row=0, column=0, sticky="nsew")
+        self.result_card.grid_rowconfigure(1, weight=1)
         body = self.result_card.body
+        body.grid_rowconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
+
+        self._build_empty_result(body)
+        self._build_success_result(body)
+        self._build_error_result(body)
+        self._show_result_state("empty")
+
+    def _build_empty_result(self, parent) -> None:
+        self.result_empty = ctk.CTkFrame(parent, fg_color="transparent")
+        self.result_empty.grid(row=0, column=0, sticky="nsew")
+        self.result_empty.grid_columnconfigure(0, weight=1)
+        self.result_empty.grid_rowconfigure(0, weight=1)
+        self.result_empty.grid_rowconfigure(5, weight=1)
+
+        self.empty_title = ctk.CTkLabel(
+            self.result_empty,
+            text="No result yet",
+            font=ctk.CTkFont(size=22, weight="bold"),
+            anchor="center",
+        )
+        self.empty_title.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+
+        self.empty_text = ctk.CTkLabel(
+            self.result_empty,
+            text=(
+                "Choose a source file on the left, select a target format, "
+                "and press Convert."
+            ),
+            text_color=MUTED,
+            justify="center",
+            wraplength=390,
+        )
+        self.empty_text.grid(row=2, column=0, sticky="ew", padx=20)
+
+        ctk.CTkLabel(
+            self.result_empty,
+            text=(
+                "Available directions\n"
+                "CSV ↔ JSON · TXT ↔ DOCX · TXT → PDF\n"
+                "DOCX/ODT → PDF · DOCX ↔ ODT · ODT → TXT"
+            ),
+            text_color=MUTED,
+            font=ctk.CTkFont(size=11),
+            justify="center",
+        ).grid(row=3, column=0, sticky="ew", pady=(22, 0))
+
+    def _build_success_result(self, parent) -> None:
+        self.result_success = ctk.CTkFrame(parent, fg_color="transparent")
+        self.result_success.grid(row=0, column=0, sticky="nsew")
+        self.result_success.grid_columnconfigure(0, weight=1)
+        self.result_success.grid_rowconfigure(4, weight=1)
+
+        ctk.CTkLabel(
+            self.result_success,
+            text="CONVERSION COMPLETE",
+            font=ctk.CTkFont(size=10, weight="bold"),
+            text_color=("#15803d", "#4ade80"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="w", pady=(0, 8))
 
         self.result_name_label = ctk.CTkLabel(
-            body, text="", font=ctk.CTkFont(size=15, weight="bold"), anchor="w"
+            self.result_success,
+            text="",
+            font=ctk.CTkFont(size=20, weight="bold"),
+            anchor="w",
+            justify="left",
+            wraplength=420,
         )
-        self.result_name_label.grid(row=0, column=0, columnspan=2, sticky="ew")
-        self.result_path_label = ctk.CTkLabel(
-            body, text="", text_color=MUTED, anchor="w", justify="left", wraplength=760
-        )
-        self.result_path_label.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(4, 12))
+        self.result_name_label.grid(row=1, column=0, sticky="ew")
 
-        buttons = ctk.CTkFrame(body, fg_color="transparent")
-        buttons.grid(row=2, column=0, columnspan=2, sticky="w")
-        self.open_file_button = ctk.CTkButton(
-            buttons, text="Открыть файл", width=150, command=self._open_result_file
+        self.result_path_label = ctk.CTkLabel(
+            self.result_success,
+            text="",
+            text_color=MUTED,
+            anchor="w",
+            justify="left",
+            wraplength=420,
         )
-        self.open_file_button.grid(row=0, column=0, padx=(0, 10))
+        self.result_path_label.grid(row=2, column=0, sticky="ew", pady=(6, 14))
+
+        details = ctk.CTkFrame(self.result_success, fg_color="transparent")
+        details.grid(row=3, column=0, sticky="ew")
+        details.grid_columnconfigure((0, 1, 2), weight=1)
+
+        self.result_format_label = self._info_tile(details, 0, "Format", "—", 140)
+        self.result_size_label = self._info_tile(details, 1, "Size", "—", 140)
+        self.result_time_label = self._info_tile(details, 2, "Time", "—", 140)
+
+        actions = ctk.CTkFrame(self.result_success, fg_color="transparent")
+        actions.grid(row=5, column=0, sticky="ew", pady=(14, 0))
+        actions.grid_columnconfigure((0, 1), weight=1)
+
+        self.open_file_button = ctk.CTkButton(
+            actions, text="Open file", height=38, command=self._open_result_file
+        )
+        self.open_file_button.grid(row=0, column=0, sticky="ew", padx=(0, 5))
         self.open_folder_button = ctk.CTkButton(
-            buttons,
-            text="Открыть папку",
-            width=150,
+            actions,
+            text="Open folder",
+            height=38,
             fg_color="transparent",
             border_width=1,
             text_color=("#333333", "#dddddd"),
             command=self._open_result_folder,
         )
-        self.open_folder_button.grid(row=0, column=1)
-        self.result_card.grid_remove()
+        self.open_folder_button.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+
+        ctk.CTkLabel(
+            self.result_success,
+            text="The source file was not modified.",
+            text_color=MUTED,
+            font=ctk.CTkFont(size=11),
+            anchor="w",
+        ).grid(row=6, column=0, sticky="w", pady=(10, 0))
+
+    def _build_error_result(self, parent) -> None:
+        self.result_error = ctk.CTkFrame(parent, fg_color="transparent")
+        self.result_error.grid(row=0, column=0, sticky="nsew")
+        self.result_error.grid_columnconfigure(0, weight=1)
+        self.result_error.grid_rowconfigure(0, weight=1)
+        self.result_error.grid_rowconfigure(5, weight=1)
+
+        ctk.CTkLabel(
+            self.result_error,
+            text="Conversion failed",
+            font=ctk.CTkFont(size=22, weight="bold"),
+            text_color=("#b91c1c", "#f87171"),
+            anchor="center",
+        ).grid(row=1, column=0, sticky="ew", pady=(0, 8))
+
+        self.error_message_label = ctk.CTkLabel(
+            self.result_error,
+            text="",
+            justify="center",
+            wraplength=390,
+        )
+        self.error_message_label.grid(row=2, column=0, sticky="ew", padx=20)
+
+        self.error_hint_label = ctk.CTkLabel(
+            self.result_error,
+            text="",
+            justify="center",
+            text_color=MUTED,
+            wraplength=390,
+        )
+        self.error_hint_label.grid(row=3, column=0, sticky="ew", padx=20, pady=(8, 0))
+
+        ctk.CTkLabel(
+            self.result_error,
+            text="Details are available in logs/converter.log.",
+            justify="center",
+            text_color=MUTED,
+            font=ctk.CTkFont(size=11),
+        ).grid(row=4, column=0, sticky="ew", pady=(18, 0))
+
+    def _show_result_state(self, state: str) -> None:
+        for frame in (self.result_empty, self.result_success, self.result_error):
+            frame.grid_remove()
+        target = {
+            "empty": self.result_empty,
+            "success": self.result_success,
+            "error": self.result_error,
+        }[state]
+        target.grid()
 
     def _browse_source(self) -> None:
         selected = filedialog.askopenfilename(
-            title="Выберите исходный файл",
+            title="Select source file",
             filetypes=SUPPORTED_FILETYPES,
         )
         if selected:
@@ -278,10 +445,17 @@ class MainWindow(ctk.CTk):
         self._target_labels = {}
         self._name_edited = False
         self._last_result_path = None
-        self.result_card.grid_remove()
+        self._show_result_state("empty")
+        self.empty_title.configure(text="No result yet")
+        self.empty_text.configure(
+            text=(
+                "Choose a source file on the left, select a target format, "
+                "and press Convert."
+            )
+        )
         self.target_var.set("—")
         self.target_menu.configure(values=["—"])
-        self.target_hint.configure(text="Проверка файла...")
+        self.target_hint.configure(text="Checking file...")
         self.source_name_label.configure(text=path.name)
         self.source_format_label.configure(text="—")
         self.source_size_label.configure(text="—")
@@ -289,8 +463,8 @@ class MainWindow(ctk.CTk):
         try:
             info = SourceInfo.from_path(path)
         except FileConverterError as exc:
-            self._show_error("Не удалось прочитать файл", exc)
-            self._set_status("Ошибка чтения файла", "error")
+            self._show_error("Could not read the file", exc)
+            self._set_status("Could not read the file", "error")
             self._update_preview()
             return
 
@@ -302,19 +476,21 @@ class MainWindow(ctk.CTk):
             validate_source(path)
         except FileConverterError as exc:
             self._source_info = None
-            self.target_hint.configure(text="Формат исходного файла не поддерживается")
-            self._set_status("Неподдерживаемый формат", "error")
+            self.target_hint.configure(text="This source format is not supported")
+            self._set_status("Unsupported format", "error")
             self._update_preview()
-            self._show_error("Файл не поддерживается", exc)
+            self._show_error("Unsupported file", exc)
             return
 
         targets = available_targets(info.extension)
         if not targets:
             self.target_hint.configure(
-                text="Для этого формата сейчас нет доступных конвертаций. "
-                "Проверьте установку LibreOffice."
+                text=(
+                    "No conversions are available for this format. "
+                    "Check that LibreOffice is installed."
+                )
             )
-            self._set_status("Нет доступных форматов", "error")
+            self._set_status("No available target formats", "error")
             self._update_preview()
             return
 
@@ -328,7 +504,7 @@ class MainWindow(ctk.CTk):
         if not self._output_dir_user_set or not self.output_dir_var.get().strip():
             self.output_dir_var.set(str(path.parent))
         self._update_preview()
-        self._set_status("Файл выбран, можно конвертировать", "idle")
+        self._set_status("File selected, ready to convert", "idle")
 
     def _current_target(self) -> str | None:
         return self._target_labels.get(self.target_var.get())
@@ -346,18 +522,20 @@ class MainWindow(ctk.CTk):
     def _target_description(self, target: str) -> str:
         source = self._source_info.extension if self._source_info else "?"
         mapping = {
-            ("csv", "json"): "Таблица CSV будет преобразована в массив JSON-объектов.",
-            ("json", "csv"): "Массив JSON-объектов будет преобразован в таблицу CSV.",
-            ("txt", "docx"): "Каждая строка текста станет абзацем документа Word.",
-            ("docx", "txt"): "Из документа Word будет извлечён текст абзацев и таблиц.",
-            ("txt", "pdf"): "Текст будет свёрстан в PDF с поддержкой Unicode.",
-            ("docx", "pdf"): "Требуется LibreOffice. Word-документ будет экспортирован в PDF.",
-            ("odt", "pdf"): "Требуется LibreOffice. OpenDocument будет экспортирован в PDF.",
-            ("docx", "odt"): "Требуется LibreOffice. Word будет преобразован в ODT.",
-            ("odt", "docx"): "Требуется LibreOffice. ODT будет преобразован в Word.",
-            ("odt", "txt"): "Из OpenDocument будет извлечён текст через odfpy.",
+            ("csv", "json"): "The CSV table becomes an array of JSON objects.",
+            ("json", "csv"): "The JSON object array becomes a CSV table.",
+            ("txt", "docx"): "Each text line becomes a paragraph in a Word document.",
+            ("docx", "txt"): "Paragraph and table text is extracted from the Word document.",
+            ("txt", "pdf"): "Text is laid out as a Unicode-capable PDF.",
+            ("docx", "pdf"): "LibreOffice exports the Word document to PDF.",
+            ("odt", "pdf"): "LibreOffice exports the OpenDocument to PDF.",
+            ("docx", "odt"): "LibreOffice converts the Word document to ODT.",
+            ("odt", "docx"): "LibreOffice converts the OpenDocument to Word.",
+            ("odt", "txt"): "Text is extracted from the OpenDocument with odfpy.",
         }
-        return mapping.get((source, target), f"Преобразование {source.upper()} → {target.upper()}.")
+        return mapping.get(
+            (source, target), f"Convert {source.upper()} → {target.upper()}."
+        )
 
     def _set_auto_name(self, target: str) -> None:
         if not self._source_info:
@@ -378,7 +556,7 @@ class MainWindow(ctk.CTk):
     def _browse_output_dir(self) -> None:
         initial = self.output_dir_var.get().strip()
         selected = filedialog.askdirectory(
-            title="Выберите папку назначения",
+            title="Select output folder",
             initialdir=initial if Path(initial).is_dir() else None,
         )
         if selected:
@@ -393,29 +571,41 @@ class MainWindow(ctk.CTk):
         can_convert = False
 
         if not self._source_info:
-            self.preview_label.configure(text="Результат: —", text_color=MUTED)
+            self.preview_label.configure(text="Result: —", text_color=MUTED)
         elif not target:
-            self.preview_label.configure(text="Результат: выберите целевой формат", text_color=MUTED)
+            self.preview_label.configure(
+                text="Result: select a target format", text_color=MUTED
+            )
         elif not directory:
-            self.preview_label.configure(text="Результат: выберите папку назначения", text_color=MUTED)
+            self.preview_label.configure(
+                text="Result: select an output folder", text_color=MUTED
+            )
         elif not Path(directory).expanduser().is_dir():
             self.preview_label.configure(
-                text=f"Результат: папка не существует — {directory}", text_color="#d97706"
+                text=f"Result: folder does not exist — {directory}",
+                text_color="#d97706",
             )
         else:
             try:
                 resolved_name, path = build_output_path(
-                    self._source_info.path, target, Path(directory).expanduser(), name or None
+                    self._source_info.path,
+                    target,
+                    Path(directory).expanduser(),
+                    name or None,
                 )
             except FileConverterError as exc:
                 self.preview_label.configure(
-                    text=f"Проверьте параметры: {exc.message}", text_color="#d97706"
+                    text=f"Check the settings: {exc.message}", text_color="#d97706"
                 )
             else:
                 can_convert = True
-                note = " · файл существует, будет запрошено подтверждение" if path.exists() else ""
+                note = (
+                    " · file exists, confirmation will be requested"
+                    if path.exists()
+                    else ""
+                )
                 self.preview_label.configure(
-                    text=f"Результат: {path}{note}", text_color=MUTED
+                    text=f"Result: {path}{note}", text_color=MUTED
                 )
 
         self._set_controls_state(can_convert)
@@ -437,7 +627,10 @@ class MainWindow(ctk.CTk):
         self._busy = busy
         if busy:
             self.progress.start()
-            self._set_status("Конвертация выполняется...", "working")
+            self._set_status("Converting...", "working")
+            self.empty_title.configure(text="Converting...")
+            self.empty_text.configure(text="Please wait while the file is processed.")
+            self._show_result_state("empty")
         else:
             self.progress.stop()
         self._set_controls_state()
@@ -450,8 +643,8 @@ class MainWindow(ctk.CTk):
         if not target or not directory:
             show_message(
                 self,
-                "Недостаточно параметров",
-                "Выберите целевой формат и папку назначения.",
+                "Missing settings",
+                "Select a target format and an output folder.",
                 error=True,
             )
             return
@@ -477,14 +670,13 @@ class MainWindow(ctk.CTk):
             try:
                 validate_request(request)
             except FileConverterError as retry_exc:
-                self._show_error("Не удалось начать конвертацию", retry_exc)
+                self._show_error("Could not start the conversion", retry_exc)
                 return
         except FileConverterError as exc:
-            self._set_status("Ошибка в параметрах", "error")
-            self._show_error("Проверьте параметры", exc)
+            self._set_status("Invalid settings", "error")
+            self._show_error("Check the settings", exc)
             return
 
-        self.result_card.grid_remove()
         self._last_result_path = None
         self._set_busy(True)
         self._thread = threading.Thread(
@@ -520,25 +712,37 @@ class MainWindow(ctk.CTk):
         self._last_result_path = result.output_path
         self.result_name_label.configure(text=result.output_name)
         self.result_path_label.configure(text=str(result.output_path))
-        self.result_card.grid()
+        self.result_format_label.configure(text=result.target_format.upper())
+        self.result_size_label.configure(text=human_size(result.size))
+        self.result_time_label.configure(text=f"{result.duration_seconds:.1f} s")
+        self._show_result_state("success")
         self._set_status(
-            f"Готово за {result.duration_seconds:.1f} с · {result.output_path.name}", "success"
+            f"Done in {result.duration_seconds:.1f} s · {result.output_path.name}",
+            "success",
         )
         self._update_preview()
 
     def _finish_error(self, exc: Exception) -> None:
         self._set_busy(False)
-        self._set_status("Ошибка конвертации", "error")
+        self._set_status("Conversion failed", "error")
         if isinstance(exc, FileConverterError):
-            self._show_error("Конвертация не выполнена", exc)
+            self.error_message_label.configure(text=exc.message)
+            self.error_hint_label.configure(text=exc.hint)
+            self._show_error("Conversion failed", exc)
         else:
+            message = f"{type(exc).__name__}: {exc}"
+            self.error_message_label.configure(text=message)
+            self.error_hint_label.configure(
+                text="See logs/converter.log for more details."
+            )
             show_message(
                 self,
-                "Непредвиденная ошибка",
-                f"{type(exc).__name__}: {exc}",
-                "Подробности записаны в logs/converter.log.",
+                "Unexpected error",
+                message,
+                "Details were written to logs/converter.log.",
                 error=True,
             )
+        self._show_result_state("error")
         self._update_preview()
 
     def _show_error(self, title: str, exc: FileConverterError) -> None:
@@ -550,7 +754,7 @@ class MainWindow(ctk.CTk):
         try:
             open_file(self._last_result_path)
         except FileConverterError as exc:
-            self._show_error("Не удалось открыть файл", exc)
+            self._show_error("Could not open the file", exc)
 
     def _open_result_folder(self) -> None:
         if not self._last_result_path:
@@ -558,15 +762,15 @@ class MainWindow(ctk.CTk):
         try:
             open_folder(self._last_result_path.parent)
         except FileConverterError as exc:
-            self._show_error("Не удалось открыть папку", exc)
+            self._show_error("Could not open the folder", exc)
 
     def _toggle_theme(self) -> None:
         if ctk.get_appearance_mode().lower() == "dark":
             ctk.set_appearance_mode("light")
-            self.theme_switch.configure(text="Тёмная тема")
+            self.theme_switch.configure(text="Dark theme")
         else:
             ctk.set_appearance_mode("dark")
-            self.theme_switch.configure(text="Светлая тема")
+            self.theme_switch.configure(text="Light theme")
 
     def _set_status(self, text: str, state: str) -> None:
         self.status_label.configure(text=text)
@@ -576,9 +780,9 @@ class MainWindow(ctk.CTk):
         if self._busy:
             confirmed = ask_confirm(
                 self,
-                "Конвертация выполняется",
-                "Закрыть приложение? Текущая операция может быть прервана.",
-                confirm_text="Закрыть",
+                "Conversion in progress",
+                "Close the application? The current operation may be interrupted.",
+                confirm_text="Close",
             )
             if not confirmed:
                 return

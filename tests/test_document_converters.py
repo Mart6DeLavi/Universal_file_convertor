@@ -68,7 +68,7 @@ def test_libreoffice_timeout(docx_source, tmp_path, monkeypatch):
         raise subprocess.TimeoutExpired(cmd=args[0], timeout=120)
 
     monkeypatch.setattr(libreoffice.subprocess, "run", raise_timeout)
-    with pytest.raises(ExternalProcessError, match="не завершил работу"):
+    with pytest.raises(ExternalProcessError, match="did not finish"):
         docx_to_pdf(docx_source, tmp_path / "out.pdf")
 
 
@@ -76,7 +76,7 @@ def test_libreoffice_nonzero_exit(docx_source, tmp_path, monkeypatch):
     monkeypatch.setattr(libreoffice, "find_libreoffice", lambda: Path("/bin/echo"))
     completed = subprocess.CompletedProcess(["soffice"], 3, "", "conversion failed")
     monkeypatch.setattr(libreoffice.subprocess, "run", lambda *a, **k: completed)
-    with pytest.raises(ExternalProcessError, match="кодом 3") as error:
+    with pytest.raises(ExternalProcessError, match="exited with code 3") as error:
         docx_to_pdf(docx_source, tmp_path / "out.pdf")
     assert "conversion failed" in error.value.stderr
 
@@ -85,13 +85,13 @@ def test_libreoffice_success_without_output_is_error(docx_source, tmp_path, monk
     monkeypatch.setattr(libreoffice, "find_libreoffice", lambda: Path("/bin/echo"))
     completed = subprocess.CompletedProcess(["soffice"], 0, "ok", "")
     monkeypatch.setattr(libreoffice.subprocess, "run", lambda *a, **k: completed)
-    with pytest.raises(ExternalProcessError, match="не создал"):
+    with pytest.raises(ExternalProcessError, match="did not create"):
         docx_to_pdf(docx_source, tmp_path / "out.pdf")
 
 
 REQUIRES_LIBREOFFICE = pytest.mark.skipif(
     not libreoffice.is_libreoffice_available(),
-    reason="LibreOffice не установлен в этой среде",
+    reason="LibreOffice is not installed in this environment",
 )
 
 

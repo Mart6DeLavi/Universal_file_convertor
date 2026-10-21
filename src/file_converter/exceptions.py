@@ -30,9 +30,9 @@ class OutputConflictError(ValidationError):
         from pathlib import Path
 
         path = Path(path)
-        message = f"Файл уже существует: {path}"
+        message = f"File already exists: {path}"
         if not hint:
-            hint = "Разрешите перезапись или выберите другое имя / папку."
+            hint = "Allow overwriting or choose a different name or folder."
         super().__init__(message, hint)
         self.path = path
 
