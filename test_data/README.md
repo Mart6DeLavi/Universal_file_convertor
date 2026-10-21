@@ -1,11 +1,13 @@
-# Тестовые данные
+# Test Data
 
-| Файл | Назначение | Ожидаемое поведение |
+[English](README.md) | [Polski](README.pl.md)
+
+| File | Purpose | Expected behavior |
 |---|---|---|
-| `sample.csv` | CSV с польскими символами, пустым полем, запятой, кавычками и многострочным значением | CSV → JSON: 5 объектов, заголовки в исходном порядке, пустое значение остаётся `""`, Unicode сохраняется |
-| `sample.json` | Массив объектов с вложенным объектом, отсутствующим ключом и булевыми значениями | JSON → CSV: заголовки `imię, nazwisko, miasto, uwagi, aktywny, adres`; отсутствующий ключ → пустая ячейка; вложенный объект → JSON-строка |
-| `sample.txt` | Текстовый файл с польскими и кириллическими символами и пустыми строками | TXT → DOCX/PDF: каждый абзац сохраняется, Unicode не теряется |
-| `sample.docx` | DOCX с заголовком, абзацами, Unicode и таблицей | DOCX → TXT/PDF/ODT: текст и таблица сохраняются; PDF создаётся через LibreOffice |
-| `sample.odt` | ODT с абзацами, Unicode и таблицей | ODT → TXT/PDF/DOCX: текст и таблица сохраняются; PDF и DOCX создаются через LibreOffice |
+| `sample.csv` | CSV with Polish characters, an empty field, a comma, quotes, and a multiline value | CSV → JSON: 5 objects, headers in source order, the empty value remains `""`, Unicode is preserved |
+| `sample.json` | Array of objects with a nested object, a missing key, and boolean values | JSON → CSV: headers `imię, nazwisko, miasto, uwagi, aktywny, adres`; missing key → empty cell; nested object → JSON string |
+| `sample.txt` | Text file with Polish and Cyrillic characters and blank lines | TXT → DOCX/PDF: every paragraph is preserved, Unicode is not lost |
+| `sample.docx` | DOCX with a heading, paragraphs, Unicode, and a table | DOCX → TXT/PDF/ODT: text and table are preserved; PDF is created through LibreOffice |
+| `sample.odt` | ODT with paragraphs, Unicode, and a table | ODT → TXT/PDF/DOCX: text and table are preserved; PDF and DOCX are created through LibreOffice |
 
-Файлы используются в ручной проверке. Автоматические тесты дополнительно создают собственные временные файлы, включая повреждённые документы и граничные случаи.
+The files are used for manual checks. Automated tests additionally create their own temporary files, including malformed documents and edge cases.

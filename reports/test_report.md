@@ -1,12 +1,14 @@
-# Отчёт о тестировании
+# Test Report
 
-Дата проверки: 21 октября 2026 года.
+[English](test_report.md) | [Polski](test_report.pl.md)
 
-## Среда
+Test date: 21 October 2026.
 
-| Компонент | Версия |
+## Environment
+
+| Component | Version |
 |---|---|
-| ОС | macOS 26.6.2 (сборка 25G83) |
+| OS | macOS 26.6.2 (build 25G83) |
 | Python | 3.14.8 |
 | Tk / Tcl | 9.1 / 9.1 |
 | pytest | 9.1.1 |
@@ -17,97 +19,115 @@
 | Pillow | 13.0.0 |
 | LibreOffice | 26.8.1.1 |
 
-LibreOffice установлен через Homebrew и обнаружен приложением как `/opt/homebrew/bin/soffice`. Приложение также находит стандартный путь `/Applications/LibreOffice.app/Contents/MacOS/soffice`.
+LibreOffice was installed with Homebrew and is discovered by the application as `/opt/homebrew/bin/soffice`. The standard application path `/Applications/LibreOffice.app/Contents/MacOS/soffice` is also detected.
 
-## Команда запуска тестов
+## Test Command
 
 ```bash
 .venv/bin/python -m pytest -v
 ```
 
-## Итог
+## Result
 
 ```text
-54 passed in 4.67s
+54 passed in 5.54s
 ```
 
-Провалов и пропущенных тестов нет. Все 10 направлений из матрицы реализованы и проверены в текущей среде.
+There are no failures or skipped tests. All ten directions from the assignment matrix are implemented and verified in this environment.
 
-## Автоматические тесты по модулям
+## Automated Tests by Module
 
-| Файл | Тестов | Что проверяется |
+| File | Tests | What is checked |
 |---|---:|---|
-| `tests/test_csv_json.py` | 14 | CSV ↔ JSON, Unicode, BOM, кавычки, запятые, многострочные поля, пустые значения, разделители, ошибки заголовков и структуры, пустой массив, roundtrip |
-| `tests/test_document_converters.py` | 8 | Настоящие офисные преобразования через LibreOffice, отсутствие зависимости, тайм-аут, ненулевой код возврата, отсутствие результата, сохранность источника |
-| `tests/test_registry.py` | 6 | Реестр, состав направлений, фильтрация зависимых от LibreOffice целей, дубликаты, делегирование сервису |
-| `tests/test_service.py` | 8 | Полный цикл сервиса, конфликты, перезапись, уникальные имена, временные каталоги, пустой CSV, сохранность исходника при ошибке |
-| `tests/test_text_converters.py` | 6 | TXT ↔ DOCX, TXT → PDF, ODT → TXT, Unicode, таблицы, повреждённые документы |
-| `tests/test_validators.py` | 12 | Проверка источника, расширений, целевого формата, каталога, имени, конфликтов и зависимости LibreOffice |
+| `tests/test_csv_json.py` | 14 | CSV ↔ JSON, Unicode, BOM, quotes, commas, multiline fields, empty values, delimiters, header and structure errors, empty array, roundtrip |
+| `tests/test_document_converters.py` | 8 | Real office conversions through LibreOffice, missing dependency, timeout, nonzero exit code, missing output, source preservation |
+| `tests/test_registry.py` | 6 | Registry, registered directions, filtering of LibreOffice-dependent targets, duplicates, delegation to the service |
+| `tests/test_service.py` | 8 | Full service flow, conflicts, overwrite, unique names, temporary folders, empty CSV, source preservation on failure |
+| `tests/test_text_converters.py` | 6 | TXT ↔ DOCX, TXT → PDF, ODT → TXT, Unicode, tables, malformed documents |
+| `tests/test_validators.py` | 12 | Source, extension, target format, directory, name, conflict, and LibreOffice dependency validation |
 
-## Проверка офисных направлений
+## Office Direction Verification
 
-Каждый тест использует документ с Unicode-текстом и пробелами в имени файла. После преобразования проверяется не только существование файла, но и его содержимое.
+Each test uses a document with Unicode text and spaces in its filename. After conversion, both file existence and file content are checked.
 
-| Направление | Проверка результата | Результат |
+| Direction | Result check | Status |
 |---|---|---|
-| DOCX → PDF | Сигнатура `%PDF`, извлечение текста через `pypdf`, наличие `Zażółć` и `Łódź` | Пройдено |
-| ODT → PDF | Сигнатура `%PDF`, извлечение текста через `pypdf`, наличие Unicode-текста | Пройдено |
-| DOCX → ODT | Открытие через `odfpy`, извлечение текста, наличие Unicode-текста | Пройдено |
-| ODT → DOCX | Открытие через `python-docx`, наличие Unicode-текста | Пройдено |
+| DOCX → PDF | `%PDF` signature, text extraction with `pypdf`, presence of `Zażółć` and `Łódź` | Passed |
+| ODT → PDF | `%PDF` signature, text extraction with `pypdf`, presence of Unicode text | Passed |
+| DOCX → ODT | Opening with `odfpy`, text extraction, presence of Unicode text | Passed |
+| ODT → DOCX | Opening with `python-docx`, presence of Unicode text | Passed |
 
-Дополнительно каждый тест сравнивает байты исходного файла до и после конвертации. Исходные документы не изменяются.
+In addition, each test compares the source file bytes before and after conversion. Source documents are not modified.
 
-## Сквозная проверка всех 10 направлений
+## End-to-End Verification of All 10 Directions
 
-Все направления дополнительно выполнены через публичный сервис `ConversionService.execute` на файлах из `test_data/`. Каждый результат открыт соответствующим парсером: `json`, `csv`, `python-docx`, `odfpy` или `pypdf`.
+All directions were also executed through the public `ConversionService.execute` API using files from `test_data/`. Each result was opened with the appropriate parser: `json`, `csv`, `python-docx`, `odfpy`, or `pypdf`.
 
-| № | Направление | Проверка результата | Размер |
+| # | Direction | Result check | Size |
 |---:|---|---|---:|
-| 1 | CSV → JSON | JSON-массив успешно разобран | 591 байт |
-| 2 | JSON → CSV | CSV успешно прочитан | 167 байт |
-| 3 | TXT → DOCX | DOCX открыт, текст присутствует | 36 845 байт |
-| 4 | DOCX → TXT | Текст извлечён | 230 байт |
-| 5 | TXT → PDF | PDF открыт, текст извлечён | 36 939 байт |
-| 6 | DOCX → PDF | PDF открыт, текст извлечён | 29 331 байт |
-| 7 | ODT → PDF | PDF открыт, текст извлечён | 21 259 байт |
-| 8 | DOCX → ODT | ODT открыт через `odfpy` | 14 964 байта |
-| 9 | ODT → DOCX | DOCX открыт, текст присутствует | 5 119 байт |
-| 10 | ODT → TXT | Текст извлечён | 230 байт |
+| 1 | CSV → JSON | JSON array parsed successfully | 591 bytes |
+| 2 | JSON → CSV | CSV read successfully | 167 bytes |
+| 3 | TXT → DOCX | DOCX opened, text present | 36,845 bytes |
+| 4 | DOCX → TXT | Text extracted | 230 bytes |
+| 5 | TXT → PDF | PDF opened, text extracted | 36,939 bytes |
+| 6 | DOCX → PDF | PDF opened, text extracted | 29,331 bytes |
+| 7 | ODT → PDF | PDF opened, text extracted | 21,259 bytes |
+| 8 | DOCX → ODT | ODT opened with `odfpy` | 14,964 bytes |
+| 9 | ODT → DOCX | DOCX opened, text present | 5,119 bytes |
+| 10 | ODT → TXT | Text extracted | 230 bytes |
 
-Все 10 проверок завершились успешно. Исходные файлы не изменялись.
+All ten checks passed. Source files were not modified.
 
-## Проверка GUI
+## GUI Verification
 
-Ручной сценарий выполнен с реальным главным окном CustomTkinter и фоновым потоком конвертации. Для каждого случая использовалась отдельная пустая папка назначения.
+The redesigned CustomTkinter window was checked with the real `MainWindow`, the background conversion thread, and a separate empty output folder for each case.
 
-| Исходный файл | Цель | Доступные цели | Результат |
+### Layout
+
+| Check | Result |
+|---|---|
+| Default window size | `1180x720` |
+| Minimum window size | `1000x620` |
+| Scrollable containers | None; no `CTkScrollableFrame` |
+| Scrollbars visible | None at default or minimum size |
+| All source controls visible at minimum size | Yes |
+| Progress and status visible at minimum size | Yes |
+| Result panel starts in the empty state | Yes |
+| Success state shows name, path, format, size, duration, and open buttons | Yes |
+| Long paths wrap without clipping controls | Yes |
+| UI language | English |
+| Theme switch | Works |
+
+### Conversions Through the GUI
+
+| Source file | Target | Available targets | Result |
 |---|---|---|---|
-| `test_data/sample.docx` | PDF | TXT, ODT, PDF | Файл создан, PDF содержит Unicode-текст |
-| `test_data/sample.docx` | ODT | TXT, ODT, PDF | Файл создан, текст читается через `odfpy` |
-| `test_data/sample.odt` | PDF | TXT, DOCX, PDF | Файл создан, PDF содержит Unicode-текст |
-| `test_data/sample.odt` | DOCX | TXT, DOCX, PDF | Файл создан, текст читается через `python-docx` |
+| `test_data/sample.csv` | JSON | JSON | File created; result card updated |
+| `test_data/sample.txt` | PDF | DOCX, PDF | File created; PDF opened and text extracted |
+| `test_data/sample.docx` | PDF | TXT, ODT, PDF | File created; PDF contains Unicode text |
+| `test_data/sample.odt` | DOCX | TXT, DOCX, PDF | File created; text readable with `python-docx` |
 
-Интерфейс не зависал, статус завершения обновлялся после фоновой операции, кнопки блокировались на время работы. Диалог перезаписи при конфликте имени открывается корректно.
+The interface did not freeze, the completion status was updated after the background operation, and the controls were disabled while work was in progress. The overwrite dialog opens correctly when the target name already exists.
 
-## Поведение без LibreOffice
+## Behavior Without LibreOffice
 
-До установки LibreOffice тестовый набор давал **50 passed, 4 skipped**. Четыре реальные офисные проверки пропускались с причиной «LibreOffice не установлен в этой среде». При этом:
+Before LibreOffice was installed, the test suite produced **50 passed, 4 skipped**. The four real office checks were skipped with the reason "LibreOffice is not installed in this environment". In that state:
 
-- приложение запускалось;
-- нативные конвертации работали;
-- направления DOCX → PDF, ODT → PDF, DOCX → ODT и ODT → DOCX не показывались в GUI;
-- попытка запросить зависимую конвертацию программно давала понятную ошибку с инструкцией по установке.
+- the application launched;
+- native conversions worked;
+- DOCX → PDF, ODT → PDF, DOCX → ODT, and ODT → DOCX were not shown in the GUI;
+- requesting a dependent conversion programmatically produced a clear error with installation instructions.
 
-После установки LibreOffice все четыре проверки выполняются без пропусков.
+After LibreOffice installation, all four checks run without skips.
 
-## Проверенные ограничения
+## Verified Limitations
 
-- Тесты проверяют текстовое содержимое и валидность форматов, но не выполняют пиксельное сравнение вёрстки PDF.
-- Качество офисных преобразований зависит от версии LibreOffice и доступных шрифтов.
-- Тесты не покрывают парольные документы, макросы, цифровые подписи и PDF/A.
-- Поддерживается только UTF-8 для CSV, JSON и TXT.
-- Пакетная конвертация и PDF как исходный формат не реализованы.
+- Tests check textual content and format validity, but do not perform pixel-level comparison of PDF layout.
+- Office conversion quality depends on the LibreOffice version and available fonts.
+- Tests do not cover password-protected documents, macros, digital signatures, or PDF/A.
+- Only UTF-8 is supported for CSV, JSON, and TXT.
+- Batch conversion and PDF as a source format are not implemented.
 
-## Вывод
+## Conclusion
 
-Все обязательные направления работают в текущей среде. Тесты проверяют как успешные сценарии, так и ошибки валидации, конфликты имён, отсутствие внешней зависимости, тайм-аут и некорректный результат LibreOffice. Существующие ограничения описаны в README и не маскируются под полностью поддержанные возможности.
+All required directions work in the current environment. The tests cover successful paths as well as validation errors, name conflicts, a missing external dependency, timeout, and incorrect LibreOffice output. The verified limitations are documented in the README and are not presented as fully supported features.
