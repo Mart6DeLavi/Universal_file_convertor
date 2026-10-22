@@ -4,7 +4,15 @@ from pathlib import Path
 
 import customtkinter as ctk
 
-from .components import MUTED
+from .components import (
+    ACCENT,
+    ACCENT_HOVER,
+    ACCENT_TEXT,
+    MUTED,
+    SECONDARY,
+    SECONDARY_HOVER,
+    SECONDARY_TEXT,
+)
 from .i18n import translate
 
 
@@ -67,12 +75,16 @@ class OverwriteDialog(_Modal):
             text=translate(language, "dialog.cancel"),
             fg_color="transparent",
             border_width=1,
-            text_color=("#333333", "#dddddd"),
+            text_color=SECONDARY_TEXT,
+            hover_color=SECONDARY,
             command=self._cancel,
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
         ctk.CTkButton(
             buttons,
             text=translate(language, "dialog.save_as", name=suggested.name),
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
             command=self._unique,
         ).grid(row=0, column=1, sticky="ew", padx=6)
         ctk.CTkButton(
@@ -125,12 +137,18 @@ class ConfirmDialog(_Modal):
             text=translate(language, "dialog.cancel"),
             fg_color="transparent",
             border_width=1,
-            text_color=("#333333", "#dddddd"),
+            text_color=SECONDARY_TEXT,
+            hover_color=SECONDARY,
             command=self._cancel,
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
-        ctk.CTkButton(buttons, text=confirm_text, command=self._confirm).grid(
-            row=0, column=1, sticky="ew", padx=(6, 0)
-        )
+        ctk.CTkButton(
+            buttons,
+            text=confirm_text,
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
+            command=self._confirm,
+        ).grid(row=0, column=1, sticky="ew", padx=(6, 0))
 
     def _confirm(self) -> None:
         self.result = "confirm"
@@ -174,7 +192,12 @@ class MessageDialog(_Modal):
                 text_color=MUTED,
             ).grid(row=2, column=0, sticky="ew", padx=24, pady=(10, 0))
         ctk.CTkButton(
-            self, text=translate(language, "dialog.close"), command=self.destroy
+            self,
+            text=translate(language, "dialog.close"),
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
+            command=self.destroy,
         ).grid(
             row=3, column=0, sticky="ew", padx=24, pady=(18, 20)
         )

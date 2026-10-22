@@ -5,7 +5,14 @@ import customtkinter as ctk
 CARD_COLOR = ("#ffffff", "#1a1a1e")
 CARD_BORDER = ("#d9d9e3", "#2b2b31")
 MUTED = ("#6b6b76", "#9a9aa5")
-ACCENT = ("#2563eb", "#4f8cff")
+ACCENT = ("#15803d", "#4ade80")
+ACCENT_HOVER = ("#166534", "#22c55e")
+ACCENT_TEXT = ("#ffffff", "#052e16")
+ACCENT_SELECTED = ("#a7f3d0", "#065f46")
+ACCENT_SELECTED_HOVER = ("#86efac", "#047857")
+SECONDARY = ("#eef0f5", "#24242a")
+SECONDARY_HOVER = ("#e2e5ec", "#2f2f37")
+SECONDARY_TEXT = ("#333333", "#dddddd")
 
 
 class SectionCard(ctk.CTkFrame):
@@ -46,7 +53,7 @@ class StatusDot(ctk.CTkLabel):
     COLORS = {
         "idle": ("#9aa0aa", "#6f7480"),
         "working": ("#d97706", "#fbbf24"),
-        "success": ("#15803d", "#4ade80"),
+        "success": ACCENT,
         "error": ("#b91c1c", "#f87171"),
     }
 

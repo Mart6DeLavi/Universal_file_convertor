@@ -24,7 +24,19 @@ from ..service import execute as execute_conversion
 from ..utils.paths import build_output_name, human_size, unique_path
 from ..utils.platform_utils import open_file, open_folder
 from ..validators import build_output_path, validate_request, validate_source
-from .components import ACCENT, MUTED, SectionCard, StatusDot
+from .components import (
+    ACCENT,
+    ACCENT_HOVER,
+    ACCENT_SELECTED,
+    ACCENT_SELECTED_HOVER,
+    ACCENT_TEXT,
+    MUTED,
+    SECONDARY,
+    SECONDARY_HOVER,
+    SECONDARY_TEXT,
+    SectionCard,
+    StatusDot,
+)
 from .dialogs import ask_confirm, ask_overwrite, show_message
 from .i18n import has_translation, translate
 
@@ -33,7 +45,7 @@ class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
         ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        ctk.set_default_color_theme("green")
 
         self._language = get_language()
         self._source_info: SourceInfo | None = None
@@ -109,6 +121,9 @@ class MainWindow(ctk.CTk):
             header,
             values=["EN", "PL"],
             width=104,
+            selected_color=ACCENT_SELECTED,
+            selected_hover_color=ACCENT_SELECTED_HOVER,
+            text_color=("#052e16", "#d1fae5"),
             command=self._on_language_change,
         )
         self.language_switch.set(self._language.upper())
@@ -117,7 +132,10 @@ class MainWindow(ctk.CTk):
         )
 
         self.theme_switch = ctk.CTkSwitch(
-            header, text=self._theme_label(), command=self._toggle_theme
+            header,
+            text=self._theme_label(),
+            progress_color=ACCENT,
+            command=self._toggle_theme,
         )
         self.theme_switch.grid(row=0, column=2, rowspan=2, sticky="e")
 
@@ -146,7 +164,14 @@ class MainWindow(ctk.CTk):
         )
         self.source_path_entry.grid(row=0, column=1, sticky="ew")
         self.browse_button = ctk.CTkButton(
-            body, text=self._t("source.browse"), width=92, height=34, command=self._browse_source
+            body,
+            text=self._t("source.browse"),
+            width=92,
+            height=34,
+            fg_color=SECONDARY,
+            hover_color=SECONDARY_HOVER,
+            text_color=SECONDARY_TEXT,
+            command=self._browse_source,
         )
         self.browse_button.grid(row=0, column=2, sticky="e", padx=(10, 0))
 
@@ -172,6 +197,11 @@ class MainWindow(ctk.CTk):
             command=self._on_target_change,
             width=150,
             height=32,
+            fg_color=ACCENT,
+            button_color=ACCENT_HOVER,
+            button_hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
+            dropdown_hover_color=ACCENT_SELECTED,
         )
         self.target_menu.grid(row=3, column=1, sticky="w")
 
@@ -200,6 +230,9 @@ class MainWindow(ctk.CTk):
             text=self._t("source.browse"),
             width=92,
             height=34,
+            fg_color=SECONDARY,
+            hover_color=SECONDARY_HOVER,
+            text_color=SECONDARY_TEXT,
             command=self._browse_output_dir,
         )
         self.output_dir_button.grid(row=5, column=2, sticky="e", padx=(10, 0))
@@ -233,6 +266,8 @@ class MainWindow(ctk.CTk):
             height=44,
             font=ctk.CTkFont(size=15, weight="bold"),
             fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
             command=self._start_conversion,
         )
         self.convert_button.grid(
@@ -255,7 +290,10 @@ class MainWindow(ctk.CTk):
         progress_box.grid_columnconfigure(0, weight=1)
 
         self.progress = ctk.CTkProgressBar(
-            progress_box, width=120, mode="determinate"
+            progress_box,
+            width=120,
+            mode="determinate",
+            progress_color=ACCENT,
         )
         self.progress.grid(row=0, column=0, sticky="e")
         self.progress.set(0)
@@ -402,7 +440,7 @@ class MainWindow(ctk.CTk):
             self.result_success,
             text=self._t("result.success.title"),
             font=ctk.CTkFont(size=10, weight="bold"),
-            text_color=("#15803d", "#4ade80"),
+            text_color=ACCENT,
             anchor="w",
         ).grid(row=0, column=0, sticky="w", pady=(0, 8))
 
@@ -448,6 +486,9 @@ class MainWindow(ctk.CTk):
             actions,
             text=self._t("result.open_file"),
             height=38,
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            text_color=ACCENT_TEXT,
             command=self._open_result_file,
         )
         self.open_file_button.grid(row=0, column=0, sticky="ew", padx=(0, 5))
@@ -457,7 +498,9 @@ class MainWindow(ctk.CTk):
             height=38,
             fg_color="transparent",
             border_width=1,
-            text_color=("#333333", "#dddddd"),
+            border_color=ACCENT,
+            text_color=ACCENT,
+            hover_color=ACCENT_SELECTED,
             command=self._open_result_folder,
         )
         self.open_folder_button.grid(row=0, column=1, sticky="ew", padx=(5, 0))
