@@ -26,6 +26,9 @@ from ..utils.platform_utils import open_file, open_folder
 from ..validators import build_output_path, validate_request, validate_source
 from .components import (
     ACCENT,
+    ACCENT_DISABLED,
+    ACCENT_DISABLED_TEXT,
+    ACCENT_FOREGROUND,
     ACCENT_HOVER,
     ACCENT_SELECTED,
     ACCENT_SELECTED_HOVER,
@@ -123,7 +126,7 @@ class MainWindow(ctk.CTk):
             width=104,
             selected_color=ACCENT_SELECTED,
             selected_hover_color=ACCENT_SELECTED_HOVER,
-            text_color=("#052e16", "#d1fae5"),
+            text_color=("#234536", "#d1fae5"),
             command=self._on_language_change,
         )
         self.language_switch.set(self._language.upper())
@@ -197,10 +200,10 @@ class MainWindow(ctk.CTk):
             command=self._on_target_change,
             width=150,
             height=32,
-            fg_color=ACCENT,
-            button_color=ACCENT_HOVER,
+            fg_color=SECONDARY,
+            button_color=ACCENT,
             button_hover_color=ACCENT_HOVER,
-            text_color=ACCENT_TEXT,
+            text_color=SECONDARY_TEXT,
             dropdown_hover_color=ACCENT_SELECTED,
         )
         self.target_menu.grid(row=3, column=1, sticky="w")
@@ -268,6 +271,7 @@ class MainWindow(ctk.CTk):
             fg_color=ACCENT,
             hover_color=ACCENT_HOVER,
             text_color=ACCENT_TEXT,
+            text_color_disabled=ACCENT_DISABLED_TEXT,
             command=self._start_conversion,
         )
         self.convert_button.grid(
@@ -415,7 +419,7 @@ class MainWindow(ctk.CTk):
             content,
             text="0%",
             font=ctk.CTkFont(size=38, weight="bold"),
-            text_color=ACCENT,
+            text_color=ACCENT_FOREGROUND,
             anchor="center",
             justify="center",
         )
@@ -440,7 +444,7 @@ class MainWindow(ctk.CTk):
             self.result_success,
             text=self._t("result.success.title"),
             font=ctk.CTkFont(size=10, weight="bold"),
-            text_color=ACCENT,
+            text_color=ACCENT_FOREGROUND,
             anchor="w",
         ).grid(row=0, column=0, sticky="w", pady=(0, 8))
 
@@ -499,7 +503,7 @@ class MainWindow(ctk.CTk):
             fg_color="transparent",
             border_width=1,
             border_color=ACCENT,
-            text_color=ACCENT,
+            text_color=ACCENT_FOREGROUND,
             hover_color=ACCENT_SELECTED,
             command=self._open_result_folder,
         )
@@ -740,8 +744,11 @@ class MainWindow(ctk.CTk):
         self.output_dir_entry.configure(state=state)
         self.name_entry.configure(state=state)
         self.target_menu.configure(state="disabled" if self._busy else "normal")
+        enabled = can_convert and not self._busy
         self.convert_button.configure(
-            state="normal" if can_convert and not self._busy else "disabled"
+            state="normal" if enabled else "disabled",
+            fg_color=ACCENT if enabled else ACCENT_DISABLED,
+            hover_color=ACCENT_HOVER if enabled else ACCENT_DISABLED,
         )
 
     def _set_progress_display(self) -> None:
