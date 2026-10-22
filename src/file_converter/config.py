@@ -70,3 +70,18 @@ def set_soffice_override(path: str | None) -> None:
         data.pop("soffice_path", None)
     with CONFIG_FILE.open("w", encoding=DEFAULT_ENCODING) as handle:
         json.dump(data, handle, ensure_ascii=False, indent=2)
+
+
+def get_language() -> str:
+    value = _read_config().get("language")
+    return value if value in {"en", "pl"} else "en"
+
+
+def set_language(language: str) -> None:
+    if language not in {"en", "pl"}:
+        return
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    data = _read_config()
+    data["language"] = language
+    with CONFIG_FILE.open("w", encoding=DEFAULT_ENCODING) as handle:
+        json.dump(data, handle, ensure_ascii=False, indent=2)

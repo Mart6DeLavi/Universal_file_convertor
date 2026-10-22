@@ -5,6 +5,7 @@ from pathlib import Path
 import customtkinter as ctk
 
 from .components import MUTED
+from .i18n import translate
 
 
 class _Modal(ctk.CTkToplevel):
@@ -31,13 +32,13 @@ class _Modal(ctk.CTkToplevel):
 
 
 class OverwriteDialog(_Modal):
-    def __init__(self, parent, path: Path, suggested: Path):
-        super().__init__(parent, "File already exists", 540, 250)
+    def __init__(self, parent, path: Path, suggested: Path, language: str = "en"):
+        super().__init__(parent, translate(language, "dialog.file_exists"), 540, 250)
         self.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             self,
-            text="The target file already exists",
+            text=translate(language, "dialog.target_exists"),
             font=ctk.CTkFont(size=18, weight="bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="ew", padx=24, pady=(24, 8))
@@ -51,7 +52,7 @@ class OverwriteDialog(_Modal):
         ).grid(row=1, column=0, sticky="ew", padx=24)
         ctk.CTkLabel(
             self,
-            text="Overwrite the file, save it under a new name, or cancel?",
+            text=translate(language, "dialog.overwrite_question"),
             wraplength=480,
             justify="left",
             anchor="w",
@@ -63,7 +64,7 @@ class OverwriteDialog(_Modal):
 
         ctk.CTkButton(
             buttons,
-            text="Cancel",
+            text=translate(language, "dialog.cancel"),
             fg_color="transparent",
             border_width=1,
             text_color=("#333333", "#dddddd"),
@@ -71,12 +72,12 @@ class OverwriteDialog(_Modal):
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
         ctk.CTkButton(
             buttons,
-            text=f"Save as {suggested.name}",
+            text=translate(language, "dialog.save_as", name=suggested.name),
             command=self._unique,
         ).grid(row=0, column=1, sticky="ew", padx=6)
         ctk.CTkButton(
             buttons,
-            text="Overwrite",
+            text=translate(language, "dialog.overwrite"),
             fg_color="#b91c1c",
             hover_color="#991b1b",
             command=self._overwrite,
@@ -92,7 +93,14 @@ class OverwriteDialog(_Modal):
 
 
 class ConfirmDialog(_Modal):
-    def __init__(self, parent, title: str, message: str, confirm_text: str = "Continue"):
+    def __init__(
+        self,
+        parent,
+        title: str,
+        message: str,
+        confirm_text: str = "Continue",
+        language: str = "en",
+    ):
         super().__init__(parent, title, 460, 210)
         self.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
@@ -114,7 +122,7 @@ class ConfirmDialog(_Modal):
         buttons.grid_columnconfigure((0, 1), weight=1)
         ctk.CTkButton(
             buttons,
-            text="Cancel",
+            text=translate(language, "dialog.cancel"),
             fg_color="transparent",
             border_width=1,
             text_color=("#333333", "#dddddd"),
@@ -131,7 +139,13 @@ class ConfirmDialog(_Modal):
 
 class MessageDialog(_Modal):
     def __init__(
-        self, parent, title: str, message: str, hint: str = "", error: bool = False
+        self,
+        parent,
+        title: str,
+        message: str,
+        hint: str = "",
+        error: bool = False,
+        language: str = "en",
     ):
         height = 300 if hint else 230
         super().__init__(parent, title, 560, height)
@@ -159,27 +173,40 @@ class MessageDialog(_Modal):
                 anchor="w",
                 text_color=MUTED,
             ).grid(row=2, column=0, sticky="ew", padx=24, pady=(10, 0))
-        ctk.CTkButton(self, text="Close", command=self.destroy).grid(
+        ctk.CTkButton(
+            self, text=translate(language, "dialog.close"), command=self.destroy
+        ).grid(
             row=3, column=0, sticky="ew", padx=24, pady=(18, 20)
         )
 
 
-def ask_overwrite(parent, path: Path, suggested: Path) -> str | None:
-    dialog = OverwriteDialog(parent, path, suggested)
+def ask_overwrite(
+    parent, path: Path, suggested: Path, language: str = "en"
+) -> str | None:
+    dialog = OverwriteDialog(parent, path, suggested, language)
     parent.wait_window(dialog)
     return dialog.result
 
 
 def ask_confirm(
-    parent, title: str, message: str, confirm_text: str = "Continue"
+    parent,
+    title: str,
+    message: str,
+    confirm_text: str = "Continue",
+    language: str = "en",
 ) -> bool:
-    dialog = ConfirmDialog(parent, title, message, confirm_text)
+    dialog = ConfirmDialog(parent, title, message, confirm_text, language)
     parent.wait_window(dialog)
     return dialog.result == "confirm"
 
 
 def show_message(
-    parent, title: str, message: str, hint: str = "", error: bool = False
+    parent,
+    title: str,
+    message: str,
+    hint: str = "",
+    error: bool = False,
+    language: str = "en",
 ) -> None:
-    dialog = MessageDialog(parent, title, message, hint, error)
+    dialog = MessageDialog(parent, title, message, hint, error, language)
     parent.wait_window(dialog)

@@ -5,12 +5,24 @@ import os
 import tempfile
 import time
 from pathlib import Path
+from typing import Callable
 
 from .exceptions import ConversionError, OutputConflictError
 from .models import ConversionRequest, ConversionResult
 from .validators import validate_request
 
 logger = logging.getLogger(__name__)
+
+ProgressCallback = Callable[[float], None]
+
+
+def _report(progress: ProgressCallback | None, value: float) -> None:
+    if progress is None:
+        return
+    try:
+        progress(max(0.0, min(1.0, value)))
+    except Exception:
+        logger.debug("Progress callback failed", exc_info=True)
 
 
 def _log_start(request: ConversionRequest) -> float:
@@ -23,9 +35,13 @@ def _log_start(request: ConversionRequest) -> float:
     return time.monotonic()
 
 
-def execute(request: ConversionRequest) -> ConversionResult:
+def execute(
+    request: ConversionRequest, progress: ProgressCallback | None = None
+) -> ConversionResult:
     started = _log_start(request)
+    _report(progress, 0.02)
     validated = validate_request(request)
+    _report(progress, 0.08)
     spec = validated.spec
     output_path = validated.output_path
     output_name = validated.output_name
@@ -37,7 +53,9 @@ def execute(request: ConversionRequest) -> ConversionResult:
     try:
         with tempfile.TemporaryDirectory(prefix=".ufc-", dir=target_dir) as tmp:
             temp_output = Path(tmp) / output_name
+            _report(progress, 0.15)
             spec.converter(validated.request.source, temp_output)
+            _report(progress, 0.82)
 
             if not temp_output.exists() or not temp_output.is_file():
                 raise ConversionError(
@@ -50,6 +68,7 @@ def execute(request: ConversionRequest) -> ConversionResult:
                     "The converter created an empty file.",
                     "Check the source document and try again.",
                 )
+            _report(progress, 0.9)
 
             if output_path.exists() and not request.overwrite:
                 raise OutputConflictError(output_path)
@@ -60,6 +79,7 @@ def execute(request: ConversionRequest) -> ConversionResult:
                 raise ConversionError(
                     f"Could not save the result: {output_path}", str(exc)
                 ) from exc
+            _report(progress, 0.97)
     except Exception:
         logger.exception(
             "Conversion error: source=%s target=%s",
@@ -81,6 +101,7 @@ def execute(request: ConversionRequest) -> ConversionResult:
         result_size,
         duration,
     )
+    _report(progress, 1.0)
     return ConversionResult(
         request=request,
         output_path=output_path,
@@ -89,5 +110,7 @@ def execute(request: ConversionRequest) -> ConversionResult:
 
 
 class ConversionService:
-    def execute(self, request: ConversionRequest) -> ConversionResult:
-        return execute(request)
+    def execute(
+        self, request: ConversionRequest, progress: ProgressCallback | None = None
+    ) -> ConversionResult:
+        return execute(request, progress)

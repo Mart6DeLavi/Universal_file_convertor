@@ -93,3 +93,26 @@ def test_service_reports_missing_libreoffice(tmp_path, monkeypatch):
 
     with pytest.raises(DependencyMissingError):
         execute(ConversionRequest(source, "pdf", tmp_path))
+
+
+def test_service_reports_monotonic_progress(tmp_path):
+    source = make_csv(tmp_path)
+    values: list[float] = []
+
+    result = execute(ConversionRequest(source, "json", tmp_path), progress=values.append)
+
+    assert result.output_path.exists()
+    assert values
+    assert values[0] <= values[-1]
+    assert values[-1] == 1.0
+    assert any(0.0 < value < 1.0 for value in values)
+
+
+def test_service_ignores_progress_callback_errors(tmp_path):
+    source = make_csv(tmp_path)
+
+    def broken_progress(_value):
+        raise RuntimeError("progress failure")
+
+    result = execute(ConversionRequest(source, "json", tmp_path), progress=broken_progress)
+    assert result.output_path.exists()

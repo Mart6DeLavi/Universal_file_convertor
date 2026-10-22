@@ -129,7 +129,9 @@ def all_registered_targets(source: str | Path) -> list[str]:
     return [target for target in TARGET_FORMATS if target in targets]
 
 
-def execute(request):
+def execute(request, progress=None):
     from .service import execute as _execute
 
-    return _execute(request)
+    if progress is None:
+        return _execute(request)
+    return _execute(request, progress)
