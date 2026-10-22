@@ -30,7 +30,7 @@ LibreOffice został zainstalowany przez Homebrew i jest wykrywany przez aplikacj
 ## Wynik
 
 ```text
-54 passed in 5.54s
+60 passed in 5.62s
 ```
 
 Nie ma błędów ani pominiętych testów. Wszystkie dziesięć kierunków z matrycy zadania jest zaimplementowanych i zweryfikowanych w tym środowisku.
@@ -95,7 +95,9 @@ Przeprojektowane okno CustomTkinter sprawdzono z rzeczywistym `MainWindow`, wąt
 | Panel wyniku zaczyna w stanie pustym | Tak |
 | Stan sukcesu pokazuje nazwę, ścieżkę, format, rozmiar, czas i przyciski otwierania | Tak |
 | Długie ścieżki zawijają się bez przycinania kontrolek | Tak |
-| Język interfejsu | Angielski |
+| Język interfejsu | Angielski i polski, przełączany w nagłówku; wybór zapamiętywany |
+| Pasek postępu | Deterministyczny, z procentami; brak animacji tam i z powrotem |
+| Stan konwersji | Wyśrodkowany stan w prawym panelu; tekst nie przesuwa się poziomo |
 | Przełącznik motywu | Działa |
 
 ### Konwersje przez GUI
@@ -107,7 +109,7 @@ Przeprojektowane okno CustomTkinter sprawdzono z rzeczywistym `MainWindow`, wąt
 | `test_data/sample.docx` | PDF | TXT, ODT, PDF | Plik utworzony; PDF zawiera tekst Unicode |
 | `test_data/sample.odt` | DOCX | TXT, DOCX, PDF | Plik utworzony; tekst czytelny przez `python-docx` |
 
-Interfejs się nie zawieszał, status zakończenia był aktualizowany po operacji w tle, a kontrolki były blokowane na czas pracy. Dialog nadpisania otwiera się poprawnie, gdy nazwa docelowa już istnieje.
+Interfejs się nie zawieszał, zdarzenia postępu trafiały z serwisu do GUI przez kolejkę, status zakończenia był aktualizowany po operacji w tle, a kontrolki były blokowane na czas pracy. Dialog nadpisania otwiera się poprawnie, gdy nazwa docelowa już istnieje.
 
 ## Zachowanie bez LibreOffice
 

@@ -18,14 +18,14 @@ The user selects a source file and an output folder, sees the formats available 
 - Source details: name, path, format, and size.
 - Dynamic target-format list based on the source file and installed dependencies.
 - Background conversion: the interface stays responsive.
-- Progress indicator, clear final status, and a detailed result card.
+- Determinate progress bar with a percentage and smooth fill, a clear final status, and a detailed result card.
 - Overwrite protection: confirmation, automatic unique name, or cancel.
 - Validation of inputs, output folder, dependencies, and conversion result.
 - Preservation of Polish, Cyrillic, and other Unicode characters.
 - Open the converted file or its folder directly from the interface.
 - Operation and error logging.
 - Dark and light themes.
-- English user interface.
+- English and Polish user interface with a header switch; the choice is saved between launches.
 
 ## Supported Formats
 
@@ -121,13 +121,13 @@ b,a,nested,c
 
 The main window contains:
 
-- a header with the application name, version, and theme switch;
-- a left panel with the source file, source details, target format, output folder, output name, result preview, Convert button, and progress status;
+- a header with the application name, version, language switch, and theme switch;
+- a left panel with the source file, source details, target format, output folder, output name, result preview, Convert button, and a progress bar with a percentage;
 - a right panel with an empty state before conversion, a success state with the result name, full path, format, size, duration, and open buttons, or an error state with a hint.
 
 The layout has no scrollable containers. The window opens at `1180x720` and remains usable at the minimum size of `1000x620`. Long paths wrap inside their labels instead of pushing controls out of view.
 
-Conversion runs in a background thread. Widget updates are delivered to the main thread through a queue, so the window does not freeze.
+Conversion runs in a background thread. Widget updates and progress events are delivered to the main thread through a queue, so the window does not freeze. The right panel switches to a centered conversion state while the file is being processed.
 
 ## Architecture
 
@@ -160,7 +160,8 @@ FileConvertor/
 │       ├── gui/
 │       │   ├── main_window.py     # main window and background operations
 │       │   ├── components.py      # cards and status indicator
-│       │   └── dialogs.py         # overwrite and message dialogs
+│       │   ├── dialogs.py         # overwrite and message dialogs
+│       │   └── i18n.py            # English and Polish interface strings
 │       └── utils/
 │           ├── paths.py           # names, conflicts, write permissions
 │           └── platform_utils.py  # open file and folder
@@ -320,7 +321,7 @@ python -m pytest -v
 
 Without LibreOffice, all native tests run and the four real office checks are skipped with a reason. With LibreOffice installed, the complete suite runs.
 
-Current result on macOS with LibreOffice 26.8.1: **54 passed**. Details are in [`reports/test_report.md`](reports/test_report.md).
+Current result on macOS with LibreOffice 26.8.1: **60 passed**. Details are in [`reports/test_report.md`](reports/test_report.md).
 
 ## Examples and Test Data
 

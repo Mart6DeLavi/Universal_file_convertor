@@ -30,7 +30,7 @@ LibreOffice was installed with Homebrew and is discovered by the application as 
 ## Result
 
 ```text
-54 passed in 5.54s
+60 passed in 5.62s
 ```
 
 There are no failures or skipped tests. All ten directions from the assignment matrix are implemented and verified in this environment.
@@ -95,7 +95,9 @@ The redesigned CustomTkinter window was checked with the real `MainWindow`, the 
 | Result panel starts in the empty state | Yes |
 | Success state shows name, path, format, size, duration, and open buttons | Yes |
 | Long paths wrap without clipping controls | Yes |
-| UI language | English |
+| UI language | English and Polish, switchable in the header; choice persisted |
+| Progress bar | Determinate, with percentage; no back-and-forth animation |
+| Conversion state | Centered right-panel state; text does not shift horizontally |
 | Theme switch | Works |
 
 ### Conversions Through the GUI
@@ -107,7 +109,7 @@ The redesigned CustomTkinter window was checked with the real `MainWindow`, the 
 | `test_data/sample.docx` | PDF | TXT, ODT, PDF | File created; PDF contains Unicode text |
 | `test_data/sample.odt` | DOCX | TXT, DOCX, PDF | File created; text readable with `python-docx` |
 
-The interface did not freeze, the completion status was updated after the background operation, and the controls were disabled while work was in progress. The overwrite dialog opens correctly when the target name already exists.
+The interface did not freeze, progress events were delivered from the service to the GUI through the queue, the completion status was updated after the background operation, and the controls were disabled while work was in progress. The overwrite dialog opens correctly when the target name already exists.
 
 ## Behavior Without LibreOffice
 

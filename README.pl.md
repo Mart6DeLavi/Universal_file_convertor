@@ -18,14 +18,14 @@ Użytkownik wybiera plik źródłowy i folder docelowy, widzi formaty dostępne 
 - Informacje o źródle: nazwa, ścieżka, format i rozmiar.
 - Dynamiczna lista formatów docelowych zależna od pliku źródłowego i zainstalowanych zależności.
 - Konwersja w tle: interfejs pozostaje responsywny.
-- Wskaźnik postępu, czytelny status końcowy i szczegółowa karta wyniku.
+- Deterministyczny pasek postępu z procentami i płynnym wypełnianiem, czytelny status końcowy i szczegółowa karta wyniku.
 - Ochrona przed przypadkowym nadpisaniem: potwierdzenie, automatyczna unikalna nazwa lub anulowanie.
 - Walidacja danych wejściowych, folderu docelowego, zależności i wyniku konwersji.
 - Zachowanie polskich, cyrylickich i innych znaków Unicode.
 - Otwieranie przekonwertowanego pliku lub jego folderu bezpośrednio z interfejsu.
 - Logowanie operacji i błędów.
 - Motywy ciemny i jasny.
-- Angielski interfejs użytkownika.
+- Interfejs angielski i polski z przełącznikiem w nagłówku; wybór jest zapamiętywany między uruchomieniami.
 
 ## Obsługiwane formaty
 
@@ -121,13 +121,13 @@ b,a,nested,c
 
 Główne okno zawiera:
 
-- nagłówek z nazwą aplikacji, wersją i przełącznikiem motywu;
-- lewy panel z plikiem źródłowym, informacjami o źródle, formatem docelowym, folderem docelowym, nazwą wyniku, podglądem, przyciskiem Convert i statusem postępu;
+- nagłówek z nazwą aplikacji, wersją, przełącznikiem języka i przełącznikiem motywu;
+- lewy panel z plikiem źródłowym, informacjami o źródle, formatem docelowym, folderem docelowym, nazwą wyniku, podglądem, przyciskiem Konwertuj i paskiem postępu z procentami;
 - prawy panel z pustym stanem przed konwersją, stanem sukcesu z nazwą wyniku, pełną ścieżką, formatem, rozmiarem, czasem trwania i przyciskami otwierania albo stanem błędu z podpowiedzią.
 
 Układ nie zawiera przewijanych kontenerów. Okno otwiera się w rozmiarze `1180x720` i pozostaje użyteczne przy minimalnym rozmiarze `1000x620`. Długie ścieżki zawijają się w etykietach, zamiast wypychać kontrolki poza widok.
 
-Konwersja działa w wątku tle. Aktualizacje widżetów trafiają do wątku głównego przez kolejkę, więc okno się nie zawiesza.
+Konwersja działa w wątku tle. Aktualizacje widżetów i zdarzenia postępu trafiają do wątku głównego przez kolejkę, więc okno się nie zawiesza. Na czas przetwarzania prawy panel pokazuje wyśrodkowany stan konwersji.
 
 ## Architektura
 
@@ -160,7 +160,8 @@ FileConvertor/
 │       ├── gui/
 │       │   ├── main_window.py     # główne okno i operacje w tle
 │       │   ├── components.py      # karty i wskaźnik statusu
-│       │   └── dialogs.py         # dialogi nadpisania i komunikatów
+│       │   ├── dialogs.py         # dialogi nadpisania i komunikatów
+│       │   └── i18n.py            # teksty interfejsu angielskie i polskie
 │       └── utils/
 │           ├── paths.py           # nazwy, konflikty, prawa zapisu
 │           └── platform_utils.py  # otwieranie pliku i folderu
@@ -320,7 +321,7 @@ python -m pytest -v
 
 Bez LibreOffice uruchamiają się wszystkie testy natywne, a cztery rzeczywiste testy biurowe są pomijane z podaniem przyczyny. Po zainstalowaniu LibreOffice uruchamia się cały zestaw.
 
-Aktualny wynik na macOS z LibreOffice 26.8.1: **54 passed**. Szczegóły w [`reports/test_report.pl.md`](reports/test_report.pl.md).
+Aktualny wynik na macOS z LibreOffice 26.8.1: **60 passed**. Szczegóły w [`reports/test_report.pl.md`](reports/test_report.pl.md).
 
 ## Przykłady i dane testowe
 
