@@ -40,7 +40,6 @@ class SectionCard(ctk.CTkFrame):
 
         self.body = ctk.CTkFrame(self, fg_color="transparent")
         self.body.grid(row=1, column=0, sticky="nsew", padx=20, pady=(12, 18))
-        self.body.grid_columnconfigure(1, weight=1)
 
 
 class StatusDot(ctk.CTkLabel):
