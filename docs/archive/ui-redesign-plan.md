@@ -114,7 +114,7 @@ Planned files:
 - Add a language selector near the top of each document:
 
 ```markdown
-[English](README.md) | [Polski](README.pl.md)
+[English](../../README.md) | [Polski](../../README.pl.md)
 ```
 
 - Keep commands, file paths, version numbers, and test counts identical in both versions.

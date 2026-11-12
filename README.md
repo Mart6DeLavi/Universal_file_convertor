@@ -6,6 +6,10 @@ A local desktop application for converting spreadsheets, text files, and office 
 
 The application is written in Python with a CustomTkinter interface. Office conversions are performed by LibreOffice in headless mode.
 
+## Documentation
+
+Detailed documentation lives in [`docs/`](docs/README.md). It covers installation and launch, GUI usage, architecture, the file map, the conversion pipeline, the core API, the GUI reference, configuration, logging and errors, testing, development, and troubleshooting.
+
 ## Purpose
 
 The user selects a source file and an output folder, sees the formats available for that file, starts a conversion, and receives a finished file. The entire workflow runs in the GUI, without a terminal. If LibreOffice is not installed, the associated directions are hidden and are not reported as available.
@@ -137,8 +141,7 @@ FileConvertor/
 ├── requirements.txt               # Python dependencies
 ├── README.md                      # English documentation
 ├── README.pl.md                   # Polish documentation
-├── PLAN.md                        # supplied assignment
-├── docs/                          # internal implementation notes
+├── docs/                          # detailed documentation (see docs/README.md)
 ├── logs/                          # application logs
 ├── reports/
 │   ├── test_report.md             # English test report
@@ -305,6 +308,19 @@ If the virtual environment is not activated:
 
 ```bash
 .venv/bin/python app.py
+```
+
+Or use the launcher script, which finds the right Python, verifies the
+dependencies and Tk support, and works from any directory:
+
+```bash
+./run.sh
+```
+
+To create `.venv` and install the requirements in one step:
+
+```bash
+./run.sh --install
 ```
 
 To send the log to the console as well:

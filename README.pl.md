@@ -6,6 +6,10 @@ Lokalna aplikacja desktopowa do konwersji arkuszy, plików tekstowych i dokument
 
 Aplikacja jest napisana w Pythonie z interfejsem CustomTkinter. Konwersje biurowe wykonuje LibreOffice w trybie headless.
 
+## Dokumentacja
+
+Szczegółowa dokumentacja znajduje się w [`docs/`](docs/README.md). Obejmuje instalację i uruchamianie, obsługę GUI, architekturę, mapę plików, potok konwersji, API rdzenia, opis interfejsu, konfigurację, logowanie i błędy, testy, rozwój oraz rozwiązywanie problemów.
+
 ## Przeznaczenie
 
 Użytkownik wybiera plik źródłowy i folder docelowy, widzi formaty dostępne dla tego pliku, uruchamia konwersję i otrzymuje gotowy wynik. Cały scenariusz odbywa się w GUI, bez terminala. Jeśli LibreOffice nie jest zainstalowany, powiązane kierunki są ukryte i nie są zgłaszane jako dostępne.
@@ -137,8 +141,7 @@ FileConvertor/
 ├── requirements.txt               # zależności Pythona
 ├── README.md                      # dokumentacja angielska
 ├── README.pl.md                   # dokumentacja polska
-├── PLAN.md                        # dostarczone zadanie
-├── docs/                          # wewnętrzne notatki implementacyjne
+├── docs/                          # szczegółowa dokumentacja (docs/README.md)
 ├── logs/                          # logi aplikacji
 ├── reports/
 │   ├── test_report.md             # raport testów po angielsku
